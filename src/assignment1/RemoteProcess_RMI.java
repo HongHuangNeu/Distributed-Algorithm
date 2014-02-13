@@ -1,6 +1,8 @@
 package assignment1;
 
-public interface RemoteProcess_RMI<T extends TimeStamp>{
+import java.rmi.Remote;
+
+public interface RemoteProcess_RMI<T extends TimeStamp> extends Remote{
 	public T getTime();
 	
 	public void send(Object messange);
