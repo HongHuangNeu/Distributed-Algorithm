@@ -14,6 +14,6 @@ public static int upperBound;
    }
     public void run()
     {
-    	
+    RemoteProcess receiver=(RemoteProcess) Naming.lookup("rmi://localhost:1099/"+message.getReceiverName());	
     }
 }
