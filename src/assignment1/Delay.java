@@ -7,9 +7,9 @@ public class Delay implements Runnable {
 	/**
 	 * @param args
 	 */
-	Message message;
+	Message<VectorTimeStamp> message;
 
-	public Delay(Message m) {
+	public Delay(Message<VectorTimeStamp> m) {
 		this.message = m;
 	}
 
