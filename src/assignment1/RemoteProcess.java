@@ -5,7 +5,7 @@ public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 	private VectorTimeStamp timeStamp;
 	private String processId;
 	
-	public RemoteProcess(int processes, int processId)
+	public RemoteProcess(int processes, String processId)
 	{
 		this.timeStamp = new VectorTimeStamp(processes);
 		this.processId = processId;
@@ -18,7 +18,7 @@ public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 
         public String getId()
         {
-            return this.Id;
+            return this.processId;
         }
         
 	public void send(Object messange)
