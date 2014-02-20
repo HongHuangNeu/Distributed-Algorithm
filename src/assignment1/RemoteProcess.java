@@ -1,5 +1,7 @@
 package assignment1;
 
+import java.rmi.Naming;
+
 public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 	
 	private VectorTimeStamp timeStamp;
@@ -9,6 +11,13 @@ public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 	{
 		this.timeStamp = new VectorTimeStamp(processes);
 		this.processId = processId;
+		try{
+			Naming.rebind(Integer.toString(processId), this);
+			
+			}catch(Exception e)
+			{
+				System.out.println("exception binding "+processId);
+			}
 	}
 	
 	public VectorTimeStamp getTime()
