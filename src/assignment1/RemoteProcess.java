@@ -28,7 +28,7 @@ public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 	}
 
 	@Override
-	public void recieve(VectorTimeStamp timeStamp, Object message) {
+	public void recieve(Message message) {
 		// TODO Auto-generated method stub
 		
 	}
