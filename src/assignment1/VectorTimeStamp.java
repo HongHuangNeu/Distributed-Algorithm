@@ -23,8 +23,11 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>>{
 	}
 	
 	public List<Integer> getTime() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.timeStamp;
 	}
-
+	
+	public VectorTimeStamp copy()
+	{
+		return new VectorTimeStamp(this.getTime());
+	}
 }
