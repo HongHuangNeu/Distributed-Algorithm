@@ -3,9 +3,9 @@ package assignment1;
 public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 	
 	private VectorTimeStamp timeStamp;
-	private String processId;
+	private int processId;
 	
-	public RemoteProcess(int processes, String processId)
+	public RemoteProcess(int processes, int processId)
 	{
 		this.timeStamp = new VectorTimeStamp(processes);
 		this.processId = processId;
@@ -16,7 +16,7 @@ public class RemoteProcess implements RemoteProcess_RMI<VectorTimeStamp>{
 		return this.timeStamp;
 	}
 
-        public String getId()
+        public int getId()
         {
             return this.processId;
         }
