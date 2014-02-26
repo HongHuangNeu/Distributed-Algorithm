@@ -12,17 +12,17 @@ import java.rmi.server.UnicastRemoteObject;
 public class Process extends UnicastRemoteObject implements RMI<Message>,
 		Runnable, Serializable {
 	// private static final long serialVersionUID = 7247714666080613254L;
-	String processName;
+	int processName;
 	public static int round = 0;
 
-	public Process(String processName) throws RemoteException {
+	public Process(int processName) throws RemoteException {
 
 		super();
 		this.processName = processName;
 		try {
 			synchronized (this) {
 				// Registry r=java.rmi.registry.LocateRegistry.getRegistry();
-				Main.registry.bind(processName, this);
+				Main.registry.bind("" + processName, this);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
