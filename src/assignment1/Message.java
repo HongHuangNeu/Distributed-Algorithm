@@ -7,10 +7,10 @@ public class Message implements Serializable {
 	public String senderName;
 	public String message;
 	public int id;
-	public Message(String senderName,String message,int id)
-	{
-		this.senderName=senderName;
-		this.message=message;
-		this.id=id;
+
+	public Message(String senderName, String message, int id) {
+		this.senderName = senderName;
+		this.message = message;
+		this.id = id;
 	}
 }
