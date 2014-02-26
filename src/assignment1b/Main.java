@@ -1,7 +1,9 @@
-package process;
+package assignment1b;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
+
+import process.Process;
 
 public class Main {
 	public static Registry registry;
@@ -20,9 +22,9 @@ public class Main {
 		}
 
 		try {
-			new Process("0");
-			new Process("1");
-			new Process("2");
+			new Process(0);
+			new Process(1);
+			new Process(2);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 			System.out.println("Exception in creating process");
