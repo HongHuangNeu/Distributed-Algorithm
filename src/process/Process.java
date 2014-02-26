@@ -1,4 +1,4 @@
-package assignment1;
+package process;
 
 import java.io.Serializable;
 import java.rmi.Naming;
@@ -13,7 +13,6 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 		Runnable, Serializable {
 	// private static final long serialVersionUID = 7247714666080613254L;
 	String processName;
-	Process process;
 	public static int round = 0;
 
 	public Process(String processName) throws RemoteException {
@@ -29,7 +28,8 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 			e.printStackTrace();
 			System.out.println("Bind fail");
 		}
-		process = this;
+		
+		final Process process = this;
 		(new Thread() {
 			public void run() {
 				process.run();

@@ -1,4 +1,4 @@
-package assignment1;
+package process;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
