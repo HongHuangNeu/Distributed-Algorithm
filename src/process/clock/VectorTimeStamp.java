@@ -2,11 +2,14 @@ package process.clock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 	
 	private List<Integer> time;
-
+	
 	public VectorTimeStamp(int size)
 	{
 		this.time = new ArrayList<Integer>(size);
@@ -15,10 +18,22 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 			this.time.set(i, 0);
 		}
 	}
-
+	
 	public VectorTimeStamp(List<Integer> times)
 	{
 		this.time = new ArrayList<Integer>(times);
+	}
+	
+	public VectorTimeStamp(String serializedTimeStamp)
+	{
+		Pattern numbers = Pattern.compile("\\d+");
+		Matcher m = numbers.matcher(serializedTimeStamp);
+		ArrayList<Integer> times = new ArrayList<Integer>();
+		
+		while(m.find())
+		{
+			times.add(Integer.parseInt(m.group()));
+		}
 	}
 	
 	public List<Integer> getTime()
@@ -53,5 +68,21 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		}
 		
 		return new VectorTimeStamp(maxTimes);
+	}
+	
+	@Override
+	public String toString()
+	{
+		String s = "(";
+		
+		for(int i = 0; i < this.time.size() - 1; i++)
+		{
+			s += this.time.get(i) + ", ";
+		}
+		
+		s += this.time.get(this.time.size() - 1);
+		s += ")";
+		
+		return s;
 	}
 }
