@@ -8,6 +8,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+import assignment1b.Main;
+
 @SuppressWarnings("serial")
 public class Process extends UnicastRemoteObject implements RMI<Message>,
 		Runnable, Serializable {
@@ -20,7 +22,7 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 		super();
 		this.processName = processName;
 		try {
-			synchronized (this) {
+			synchronized (Main.registry) {
 				// Registry r=java.rmi.registry.LocateRegistry.getRegistry();
 				Main.registry.bind("" + processName, this);
 			}
@@ -39,7 +41,6 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 	}
 
 	public void send(Message m, String name) {
-
 		try {
 			synchronized (this) {
 				m.id = Main.id++;
