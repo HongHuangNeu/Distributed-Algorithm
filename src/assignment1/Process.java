@@ -75,7 +75,7 @@ public class Process extends UnicastRemoteObject implements RMI<Message<List<Int
 			if (Integer.valueOf(processName) != j) {
 				Message<List<Integer>> m;
 				synchronized (Main.id) {
-					m = new Message<List<Integer>>(processName, "hello", (int) Main.id++,
+					m = new Message<List<Integer>>(processName, this.processIndex, "hello", (int) Main.id++,
 							this.processClock.getCurrentTime());
 				}
 				send(m, String.valueOf(j));
