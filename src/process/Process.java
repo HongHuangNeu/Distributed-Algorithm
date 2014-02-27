@@ -42,7 +42,7 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 
 	public void send(Message m, String name) {
 		try {
-			synchronized (this) {
+			synchronized (Main.registry) {
 				System.out.println("sent to process " + name + "from process "
 						+ processName + " message:" + m.getMessage()
 						+ " message number " + m.getId());
