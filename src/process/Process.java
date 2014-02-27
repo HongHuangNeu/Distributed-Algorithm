@@ -43,10 +43,9 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 	public void send(Message m, String name) {
 		try {
 			synchronized (this) {
-				m.id = Main.id++;
 				System.out.println("sent to process " + name + "from process "
-						+ processName + " message:" + m.message
-						+ " message number " + m.id);
+						+ processName + " message:" + m.getMessage()
+						+ " message number " + m.getId());
 
 				System.setProperty("java.security.policy", Process.class
 						.getResource("my.policy").toString());
@@ -61,7 +60,6 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 			System.out.println("now process" + processName);
 			e.printStackTrace();
 			System.out.println("now process" + processName);
-
 		}
 
 	}
@@ -70,7 +68,11 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 		for (int i = 0; i < 100; i++) {
 			int j = i % 3;
 			if (Integer.valueOf(processName) != j) {
-				Message m = new Message(processName, "hello", 0);
+				Message m;
+				synchronized (Main.id)
+				{
+					m = new Message(processName, "hello", Main.id++);
+				}
 				send(m, String.valueOf(j));
 			}
 		}
@@ -82,7 +84,7 @@ public class Process extends UnicastRemoteObject implements RMI<Message>,
 
 	public void receive(Message message) throws RemoteException {
 		System.out.println(processName + " receive from process "
-				+ message.senderName + " message:" + message.message
-				+ " message number " + message.id);
+				+ message.getSenderName() + " message:" + message.getMessage()
+				+ " message number " + message.getId());
 	}
 }

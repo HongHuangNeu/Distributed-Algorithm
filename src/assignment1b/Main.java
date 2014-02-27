@@ -7,7 +7,7 @@ import process.Process;
 
 public class Main {
 	public static Registry registry;
-	public static int id = 0;
+	public static Integer id = 0;
 
 	/**
 	 * @param args
