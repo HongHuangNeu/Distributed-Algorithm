@@ -5,7 +5,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Main {
- public static Registry registry;
 public static int id=0;
  /**
 	 * @param args
@@ -13,7 +12,7 @@ public static int id=0;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		try {
-			Main.registry= java.rmi.registry.LocateRegistry.createRegistry(4303);
+			java.rmi.registry.LocateRegistry.createRegistry(4303);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
