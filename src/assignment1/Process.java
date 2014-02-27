@@ -27,6 +27,7 @@ public class Process extends UnicastRemoteObject implements RMI<Message<List<Int
 		super();
 		this.processName = processName;
 		this.processIndex = processIndex;
+		this.processClock=clock;
 		try {
 			synchronized (this) {
 

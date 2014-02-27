@@ -1,5 +1,7 @@
 package assignment1.clock;
 
-public interface TimeStamp<T> {
+import java.io.Serializable;
+
+public interface TimeStamp<T> extends Serializable {
 	public T getTime();
 }

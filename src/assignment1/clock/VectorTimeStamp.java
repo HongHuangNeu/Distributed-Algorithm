@@ -14,7 +14,7 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		this.time = new ArrayList<Integer>(size);
 
 		for(int i = 0; i < size; i++){
-			this.time.set(i, 0);
+			this.time.add(0);
 		}
 	}
 
@@ -57,7 +57,7 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		return new VectorTimeStamp(newTimes);
 	}
 
-	public VectorTimeStamp max(VectorTimeStamp other)
+	public VectorTimeStamp max(TimeStamp<List<Integer>> other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
 
