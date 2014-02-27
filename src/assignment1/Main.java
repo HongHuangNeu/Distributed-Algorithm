@@ -5,7 +5,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class Main {
-public static int id=0;
+public static Integer id=0;
  /**
 	 * @param args
 	 */
@@ -18,9 +18,9 @@ public static int id=0;
 		}
 		
 		try{
-	Process p1=	new Process("0");
-	Process p2=	new Process("1");
-	Process p3=	new Process("2");
+	Process p1=	new Process("0", 0);
+	Process p2=	new Process("1", 1);
+	Process p3=	new Process("2", 2);
 		new Thread(p1).start();
 		new Thread(p2).start();
 		new Thread(p3).start();
