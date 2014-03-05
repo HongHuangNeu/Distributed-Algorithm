@@ -13,7 +13,7 @@ import java.util.List;
 import assignment1.clock.Clock;
 
 //@SuppressWarnings("serial")
-public class Process extends UnicastRemoteObject implements RMI<Message<List<Integer>>>,
+public class Process extends UnicastRemoteObject implements RMI<List<Integer>>,
 		Runnable, Serializable {
 	private static final long serialVersionUID = 7247714666080613254L;
 	private String processName;
