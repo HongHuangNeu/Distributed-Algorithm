@@ -94,59 +94,83 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		}
 		System.out.println("finish sending");
 	}
-
+	public void deliver(Message message)
+	{
+		this.processClock.updateRecieved(message.getSentAt());
+		mergeLocalBuffer(message);
+	}
 	public void receive(Message message) throws RemoteException {
 		// notify the clock
 		
 		System.out.println(processIndex + " receive from process "
 				+ message.getSenderIndex() + " message:" + message.getMessage()
 				+ " message number " + message.getId());
+		synchronized(this){
 		addToMessageBuffer(message);
+		}
 	}
 	public void addToMessageBuffer(Message message)
 	{
 		if(canDelivered(message))
 		{
-			this.processClock.updateRecieved(message.getSentAt());
+			synchronized(this.processClock)
+			{
+				deliver(message);
+				for(Message m:this.messageBuffer)
+				{
+					deliver(m);
+					
+				}
+			}
 			
 		}
 	}
 	public void mergeLocalBuffer(Message message)
 	{
-		Iterator iter = message.getTimeStampBuffer().entrySet().iterator(); 
-		while (iter.hasNext()) { 
-		    Map.Entry<Integer,VectorTimeStamp> entry = (Map.Entry<Integer,VectorTimeStamp>) iter.next(); 
-		    Integer key = entry.getKey(); 
-		    VectorTimeStamp val = entry.getValue();
-		    if(this.timeStampBuffer.containsKey(key))
-		    {
-		    	VectorTimeStamp myVal=this.timeStampBuffer.get(key);
-		    	VectorTimeStamp messageVal=message.getTimeStampBuffer().get(key);
-		    	this.timeStampBuffer.put(key, myVal.max(messageVal));
-		    }
-		    else{
-		    	this.timeStampBuffer.put(key, val);
-		    }
-		} 
+		
+		for(Integer key:message.getTimeStampBuffer().keySet())
+		{
+			VectorTimeStamp value=message.getTimeStampBuffer().get(key);
+			if(this.timeStampBuffer.containsKey(key))
+			{
+				VectorTimeStamp myValue=this.timeStampBuffer.get(key);
+				this.timeStampBuffer.put(key, value.max(myValue));
+			}
+			else
+			{
+				this.timeStampBuffer.put(key, value);
+			}
+			
+			
+		}
 	}
-	public void setClock(VectorClock processClock)
-	{
-		this.processClock=processClock;
-	}
-	public VectorClock getClock()
-	{
-		return this.processClock;
-	}
+	
 	public int getProcessIndex()
 	{
 		return this.processIndex;
 	}
 	public void updateOwnBufferAfterSend(int receiverIndex)
 	{
+		synchronized(this.timeStampBuffer){
 		this.timeStampBuffer.put(receiverIndex, this.processClock.getCurrentTime());
+		}
 	}
 	public boolean canDelivered(Message message)
 	{
-		return false;
+	
+	synchronized(this.messageBuffer){	
+		Map<Integer,VectorTimeStamp> senderTimeStampBuffer=message.getTimeStampBuffer();
+		if(senderTimeStampBuffer.containsKey(this.processIndex)){
+			if(senderTimeStampBuffer.get(this.processIndex).biggerThan(this.processClock.getCurrentTime()))
+			{
+				return false;
+			}else{
+				return true;
+			}
+		}else
+		{
+			return true;
+		}
+	  }//synchronized
 	}
 }
