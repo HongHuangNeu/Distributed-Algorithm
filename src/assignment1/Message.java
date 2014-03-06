@@ -1,23 +1,28 @@
 package assignment1;
 
 import java.io.Serializable;
+import java.util.*;
 
 import assignment1.clock.TimeStamp;
+import assignment1.clock.VectorTimeStamp;
 
 public class Message<T> implements Serializable {
 	private static final long serialVersionUID = -5836283489677344417L;
 	private String senderName;
 	private int senderIndex;
+	private String receiverName;
 	private String message;
 	private int id;
 	private TimeStamp<T> sentAt;
+	private Map<Integer,VectorTimeStamp> TimeStampBuffer;
 	
-	public Message(String senderName, int senderIndex, String message, int id, TimeStamp<T> sentAt) {
+	public Message(String senderName, int senderIndex, String message, int id, TimeStamp<T> sentAt,String receiverName) {
 		this.senderName = senderName;
 		this.senderIndex = senderIndex;
 		this.message = message;
 		this.id = id;
 		this.sentAt = sentAt;
+		this.receiverName=receiverName;
 	}
 	
 	public String getSenderName()
@@ -44,5 +49,20 @@ public class Message<T> implements Serializable {
 	{
 		return this.sentAt;
 	}
-	
+	public Map<Integer, VectorTimeStamp> getTimeStampBuffer() {
+		return TimeStampBuffer;
+	}
+
+	public void setTimeStampBuffer(Map<Integer, VectorTimeStamp> timeStampBuffer) {
+		TimeStampBuffer = timeStampBuffer;
+	}
+
+	public String getReceiverName() {
+		return receiverName;
+	}
+
+	public void setReceiverName(String receiverName) {
+		this.receiverName = receiverName;
+	}
+
 }
