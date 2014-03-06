@@ -57,9 +57,15 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 				mObj = new Message<T>(this.processName, this.processIndex, m, Main.id++, this.processClock.getCurrentTime());
 			}
 			
+			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
 			RMI<T> reciever = (RMI<T>) registry.lookup(recieverName);
+			
+			// notify the clock
+			this.processClock.updateSent(this.processIndex);
+			
+			// send the message
 			DelayedMessageSender<T> sender = new DelayedMessageSender<T>(this, reciever, mObj, 1000);
 			new Thread(sender).start();
 
@@ -82,6 +88,8 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	}
 
 	public void receive(Message<T> message) throws RemoteException {
+		// notify the clock
+		this.processClock.updateRecieved(message.getSentAt());
 		System.out.println(processName + " receive from process "
 				+ message.getSenderName() + " message:" + message.getMessage()
 				+ " message number " + message.getId());
