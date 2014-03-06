@@ -69,7 +69,7 @@ public class VectorTimeStamp implements Comparable<VectorTimeStamp> {
 		return new VectorTimeStamp(maxTimes);
 	}
 	//Hong added
-	public int comparedTo(VectorTimeStamp other)
+	public int compareTo(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
 		if(other.equals(this)){return 0;}
