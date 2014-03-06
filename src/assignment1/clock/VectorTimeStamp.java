@@ -68,7 +68,20 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 
 		return new VectorTimeStamp(maxTimes);
 	}
-
+	//Hong added
+	public Boolean BiggerThan(TimeStamp<List<Integer>> other)
+	{
+		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
+		for(int i=0;i<this.getTime().size();i++)
+		{
+			if(this.getTime().get(i)<maxTimes.get(i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	@Override
 	public String toString()
 	{

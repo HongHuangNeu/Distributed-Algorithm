@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.List;
 
 import assignment1.clock.Clock;
@@ -16,11 +17,11 @@ import assignment1.clock.Clock;
 public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		Runnable, Serializable {
 	private static final long serialVersionUID = 7247714666080613254L;
-	private String processName;
-	private int processIndex;
-	private Clock<T> processClock;
+	protected String processName;
+	protected int processIndex;
+	protected Clock<T> processClock;
 	public static int round = 0;
-
+	
 	public Process(String processName, int processIndex, Clock<T> clock)
 			throws RemoteException {
 
@@ -54,7 +55,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 			Message<T> mObj;
 			synchronized(Main.id)
 			{
-				mObj = new Message<T>(this.processName, this.processIndex, m, Main.id++, this.processClock.getCurrentTime());
+				mObj = new Message<T>(this.processName, this.processIndex, m, Main.id++, this.processClock.getCurrentTime(),recieverName);
 			}
 			
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
@@ -85,5 +86,22 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		System.out.println(processName + " receive from process "
 				+ message.getSenderName() + " message:" + message.getMessage()
 				+ " message number " + message.getId());
+		addToMessage(message);
+	}
+	public void addToMessage(Message<T> message)
+	{
+		
+	}
+	public void setClock(Clock<T> processClock)
+	{
+		this.processClock=processClock;
+	}
+	public Clock<T> getClock()
+	{
+		return this.processClock;
+	}
+	public int getProcessIndex()
+	{
+		return this.processIndex;
 	}
 }

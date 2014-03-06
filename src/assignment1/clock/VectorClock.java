@@ -32,4 +32,12 @@ public class VectorClock implements Clock<List<Integer>>
 	{
 		this.currentTime = this.currentTime.inc(processId);
 	}
+
+	public void setCurrentTime(VectorTimeStamp currentTime) {
+		this.currentTime = currentTime;
+	}
+	public VectorTimeStamp getIncTimeStamp()
+	{
+		return this.currentTime.inc(processId);
+	}
 }
