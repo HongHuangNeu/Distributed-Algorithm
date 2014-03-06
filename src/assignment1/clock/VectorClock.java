@@ -3,7 +3,7 @@ package assignment1.clock;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VectorClock implements Clock<List<Integer>>
+public class VectorClock 
 {
 	private VectorTimeStamp currentTime;
 	private int processId;
@@ -22,13 +22,13 @@ public class VectorClock implements Clock<List<Integer>>
 		this.currentTime = this.currentTime.inc(processId);
 	}
 
-	public void updateRecieved( TimeStamp<List<Integer>> remoteTime)
+	public void updateRecieved( VectorTimeStamp remoteTime)
 	{
           		VectorTimeStamp ownTime=this.currentTime.inc(processId);
           		this.currentTime=ownTime.max(remoteTime);
 	}
 
-	public void updateOther(int processId, TimeStamp<List<Integer>> localTime, TimeStamp<List<Integer>> remoteTime)
+	public void updateOther(int processId, VectorTimeStamp localTime, VectorTimeStamp remoteTime)
 	{
 		this.currentTime = this.currentTime.inc(processId);
 	}

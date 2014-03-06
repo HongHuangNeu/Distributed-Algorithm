@@ -13,8 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import assignment1.clock.Clock;
-import assignment1.clock.TimeStamp;
+
+import assignment1.clock.VectorClock;
 import assignment1.clock.VectorTimeStamp;
 
 //@SuppressWarnings("serial")
@@ -23,14 +23,14 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	private static final long serialVersionUID = 7247714666080613254L;
 	
 	protected int processIndex;
-	protected Clock<T> processClock;
+	protected VectorClock processClock;
 	public static int round = 0;
 	
 	
-	private Map<Integer,TimeStamp<T>> timeStampBuffer;   //Local Buffer
-	public ArrayList<Message<List<Integer>>> messageBuffer=new ArrayList<Message<List<Integer>>>();// Buffer to include undelivered message
+	private Map<Integer,VectorTimeStamp> timeStampBuffer;   //Local Buffer
+	public ArrayList<Message> messageBuffer=new ArrayList<Message>();// Buffer to include undelivered message
 	
-	public Process(String processName, int processIndex, Clock<T> clock)
+	public Process(String processName, int processIndex, VectorClock clock)
 			throws RemoteException {
 
 		super();
@@ -59,13 +59,13 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		try
 		{
 			// wrap message contents m into message object
-			Message<T> mObj;
+			Message mObj;
 			
 			// notify the clock
 			this.processClock.updateSent(this.processIndex);
 			synchronized(Main.id)
 			{
-				mObj = new Message<T>(this.processIndex, m, Main.id++, this.processClock.getCurrentTime(),receiverIndex,this.timeStampBuffer);
+				mObj = new Message(this.processIndex, m, Main.id++, this.processClock.getCurrentTime(),receiverIndex,this.timeStampBuffer);
 			}
 			updateOwnBuffer(receiverIndex);
 			// get the proxy object
@@ -95,7 +95,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		System.out.println("finish sending");
 	}
 
-	public void receive(Message<T> message) throws RemoteException {
+	public void receive(Message message) throws RemoteException {
 		// notify the clock
 		
 		System.out.println(processIndex + " receive from process "
@@ -103,7 +103,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 				+ " message number " + message.getId());
 		addToMessageBuffer(message);
 	}
-	public void addToMessageBuffer(Message<T> message)
+	public void addToMessageBuffer(Message message)
 	{
 		if(canDelivered(message))
 		{
@@ -111,17 +111,17 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 			
 		}
 	}
-	public void mergeLocalBuffer(Message<T> message)
+	public void mergeLocalBuffer(Message message)
 	{
 		Iterator iter = message.getTimeStampBuffer().entrySet().iterator(); 
 		while (iter.hasNext()) { 
-		    Map.Entry<Integer,VectorTimeStamp> entry = (Map.Entry<Integer,TimeStamp<T>>) iter.next(); 
+		    Map.Entry<Integer,VectorTimeStamp> entry = (Map.Entry<Integer,VectorTimeStamp>) iter.next(); 
 		    Integer key = entry.getKey(); 
 		    VectorTimeStamp val = entry.getValue();
 		    if(this.timeStampBuffer.containsKey(key))
 		    {
-		    	TimeStamp<T> myVal=this.timeStampBuffer.get(key);
-		    	TimeStamp<T> messageVal=message.getTimeStampBuffer().get(key);
+		    	VectorTimeStamp myVal=this.timeStampBuffer.get(key);
+		    	VectorTimeStamp messageVal=message.getTimeStampBuffer().get(key);
 		    	this.timeStampBuffer.put(key, myVal.max(messageVal));
 		    }
 		    else{
@@ -129,11 +129,11 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		    }
 		} 
 	}
-	public void setClock(Clock<T> processClock)
+	public void setClock(VectorClock processClock)
 	{
 		this.processClock=processClock;
 	}
-	public Clock<T> getClock()
+	public VectorClock getClock()
 	{
 		return this.processClock;
 	}
@@ -145,7 +145,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	{
 		this.timeStampBuffer.put(receiverIndex, this.processClock.getCurrentTime());
 	}
-	public boolean canDelivered(Message<T> message)
+	public boolean canDelivered(Message message)
 	{
 		return false;
 	}

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VectorTimeStamp implements TimeStamp<List<Integer>> {
+public class VectorTimeStamp  {
 
 	private List<Integer> time;
 
@@ -57,7 +57,7 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		return new VectorTimeStamp(newTimes);
 	}
 
-	public VectorTimeStamp max(TimeStamp<List<Integer>> other)
+	public VectorTimeStamp max(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
 
@@ -69,7 +69,7 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		return new VectorTimeStamp(maxTimes);
 	}
 	//Hong added
-	public Boolean biggerThan(TimeStamp<List<Integer>> other)
+	public Boolean biggerThan(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
 		for(int i=0;i<this.getTime().size();i++)
