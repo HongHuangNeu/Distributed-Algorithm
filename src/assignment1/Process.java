@@ -9,6 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +28,10 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	public static int round = 0;
 	
 	
-	private Map<Integer,VectorTimeStamp> timeStampBuffer;   //Local Buffer
+	private Map<Integer,VectorTimeStamp> timeStampBuffer=new HashMap();   //Local Buffer
 	public ArrayList<Message> messageBuffer=new ArrayList<Message>();// Buffer to include undelivered message
 	
-	public Process(String processName, int processIndex, VectorClock clock)
+	public Process( int processIndex, VectorClock clock)
 			throws RemoteException {
 
 		super();
@@ -38,7 +39,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		this.processClock=clock;
 		try {
 			Registry registry = LocateRegistry.getRegistry(4303);
-			registry.rebind(processName, this);
+			registry.rebind(Integer.toString(processIndex), this);
 			System.out.println("bind successful");
 			System.setProperty("java.security.policy", Process.class
 			.getResource("my.policy").toString());
@@ -67,7 +68,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 			{
 				mObj = new Message(this.processIndex, m, Main.id++, this.processClock.getCurrentTime(),receiverIndex,this.timeStampBuffer);
 			}
-			updateOwnBufferAfterSend(receiverIndex);
+			updateBufferAfterSend(receiverIndex);
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
@@ -94,40 +95,78 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		}
 		System.out.println("finish sending");
 	}
-	public void deliver(Message message)
-	{
-		this.processClock.updateRecieved(message.getSentAt());
-		mergeLocalBuffer(message);
-	}
+	
 	public void receive(Message message) throws RemoteException {
 		// notify the clock
 		
 		System.out.println(processIndex + " receive from process "
 				+ message.getSenderIndex() + " message:" + message.getMessage()
 				+ " message number " + message.getId());
+
 		synchronized(this){
-		addToMessageBuffer(message);
+			if(this.canDeliver(message))
+			{
+				this.deliver(message);
+				this.processBuffer();
+			}
+			else
+			{
+				this.messageBuffer.add(message);
+			}
 		}
 	}
-	public void addToMessageBuffer(Message message)
+	
+	private void processBuffer()
 	{
-		if(canDelivered(message))
+		boolean updated = true;
+		Message toDeliver = null;
+		
+		while(updated)
 		{
-			synchronized(this.processClock)
+			for(Message m : this.messageBuffer)
 			{
-				deliver(message);
-				for(Message m:this.messageBuffer)
+				toDeliver = null;
+				
+				if(this.canDeliver(m))
 				{
-					deliver(m);
-					
+					//Deliverable message found!
+					toDeliver = m;
+					break;
+
 				}
 			}
 			
+			if(toDeliver != null)
+			{
+				//local time stamp changes here
+				this.deliver(toDeliver);
+				updated = true;
+			}
+			else
+			{
+				updated = false;
+			}
 		}
 	}
+	
+	private boolean canDeliver(Message m)
+	{
+		VectorTimeStamp expected = m.getTimeStampBuffer().get(this.processIndex);
+		
+		return this.processClock.getCurrentTime().biggerOrEqual(expected);
+	}
+	
+	private void deliver(Message m)
+	{
+		this.messageBuffer.remove(m);
+		this.processClock.updateRecieved(m.getSentAt());
+		this.mergeLocalBuffer(m);
+		System.out.println("deliver "+m.getId());
+	}
+	
 	public void mergeLocalBuffer(Message message)
 	{
-		
+	
 		for(Integer key:message.getTimeStampBuffer().keySet())
 		{
 			VectorTimeStamp value=message.getTimeStampBuffer().get(key);
@@ -149,28 +188,11 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	{
 		return this.processIndex;
 	}
-	public void updateOwnBufferAfterSend(int receiverIndex)
+	
+	public void updateBufferAfterSend(int receiverIndex)
 	{
 		synchronized(this.timeStampBuffer){
 		this.timeStampBuffer.put(receiverIndex, this.processClock.getCurrentTime());
 		}
-	}
-	public boolean canDelivered(Message message)
-	{
-	
-	synchronized(this.messageBuffer){	
-		Map<Integer,VectorTimeStamp> senderTimeStampBuffer=message.getTimeStampBuffer();
-		if(senderTimeStampBuffer.containsKey(this.processIndex)){
-			if(senderTimeStampBuffer.get(this.processIndex).biggerThan(this.processClock.getCurrentTime()))
-			{
-				return false;
-			}else{
-				return true;
-			}
-		}else
-		{
-			return true;
-		}
-	  }//synchronized
 	}
 }

@@ -1,11 +1,12 @@
 package assignment1.clock;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VectorTimeStamp implements Comparable<VectorTimeStamp> {
+public class VectorTimeStamp implements Serializable {
 
 	private List<Integer> time;
 
@@ -69,19 +70,19 @@ public class VectorTimeStamp implements Comparable<VectorTimeStamp> {
 		return new VectorTimeStamp(maxTimes);
 	}
 	//Hong added
-	public int compareTo(VectorTimeStamp other)
+	public boolean biggerOrEqual(VectorTimeStamp than)
 	{
-		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
-		if(other.equals(this)){return 0;}
+		List<Integer> otherTimes = new ArrayList<Integer>(than.getTime());
 		
-		for(int i=0;i<this.getTime().size();i++)
+		for(int i = 0; i < this.getTime().size(); i++)
 		{
-			if(this.getTime().get(i)<maxTimes.get(i))
+			if(this.getTime().get(i) < otherTimes.get(i))
 			{
-				return -1;
+				return false;
 			}
 		}
-		return 1;
+		
+		return true;
 	}
 	
 	@Override
