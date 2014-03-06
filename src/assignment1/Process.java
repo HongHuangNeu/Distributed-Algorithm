@@ -67,7 +67,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 			{
 				mObj = new Message(this.processIndex, m, Main.id++, this.processClock.getCurrentTime(),receiverIndex,this.timeStampBuffer);
 			}
-			updateOwnBuffer(receiverIndex);
+			updateOwnBufferAfterSend(receiverIndex);
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
@@ -141,7 +141,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	{
 		return this.processIndex;
 	}
-	public void updateOwnBuffer(int receiverIndex)
+	public void updateOwnBufferAfterSend(int receiverIndex)
 	{
 		this.timeStampBuffer.put(receiverIndex, this.processClock.getCurrentTime());
 	}

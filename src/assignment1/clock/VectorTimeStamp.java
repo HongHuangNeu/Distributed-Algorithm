@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VectorTimeStamp  {
+public class VectorTimeStamp implements Comparable<VectorTimeStamp> {
 
 	private List<Integer> time;
 
@@ -69,17 +69,19 @@ public class VectorTimeStamp  {
 		return new VectorTimeStamp(maxTimes);
 	}
 	//Hong added
-	public Boolean biggerThan(VectorTimeStamp other)
+	public int comparedTo(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
+		if(other.equals(this)){return 0;}
+		
 		for(int i=0;i<this.getTime().size();i++)
 		{
 			if(this.getTime().get(i)<maxTimes.get(i))
 			{
-				return false;
+				return -1;
 			}
 		}
-		return true;
+		return 1;
 	}
 	
 	@Override
@@ -96,5 +98,15 @@ public class VectorTimeStamp  {
 		s += ")";
 
 		return s;
+	}
+	public boolean equals(Object o)
+	{
+		if(o instanceof VectorTimeStamp)
+		{
+			return this.getTime().equals(((VectorTimeStamp) o).getTime());
+		}
+		else{
+			return false;
+		}
 	}
 }
