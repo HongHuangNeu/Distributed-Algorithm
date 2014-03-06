@@ -2,33 +2,28 @@ package assignment1;
 
 import java.rmi.RemoteException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import assignment1.clock.Clock;
 import assignment1.clock.TimeStamp;
 import assignment1.clock.VectorTimeStamp;
 
-public class Sender<T> extends Process<T> {
+public class Sender extends Process<List<Integer>> {
 	private static final long serialVersionUID = 7247714666080613254L;
 	private Map<Integer,VectorTimeStamp> TimeStampBuffer;
-	public Sender(String processName, int processIndex, Clock<T> clock) throws RemoteException
+	public Sender(String processName, int processIndex, Clock<List<Integer>> clock) throws RemoteException
 	{
 		super(processName,processIndex,clock);
 		
 	}
-	public void getMessage(Message<T> message)
+	public void getMessage(Message<List<Integer>> message)
 	{
 	    this.processClock.updateRecieved(message.getSentAt());
 	    updateBufferReceive(message.getTimeStampBuffer()); 
 	}
-	public void sendMessage(Message<T> message)
-	{
-		
-		this.processClock.getIncTimeStamp();
-		this.processClock.updateSent(this.processIndex);
-		
-	}
-	public void updateBufferReceive(Map<Integer,VectorTimeStamp> MessageStampBuffer)
+	
+	public void updateBufferReceive(Map<Integer,TimeStamp<List<Integer>>> MessageStampBuffer)
 	{
 		Iterator iter = MessageStampBuffer.entrySet().iterator(); 
 		while (iter.hasNext()) { 
@@ -37,8 +32,8 @@ public class Sender<T> extends Process<T> {
 		    VectorTimeStamp val = entry.getValue();
 		    if(this.TimeStampBuffer.containsKey(key))
 		    {
-		    	VectorTimeStamp myVal=this.TimeStampBuffer.get(key);
-		    	VectorTimeStamp messageVal=MessageStampBuffer.get(key);
+		    	TimeStamp<List<Integer>> myVal=this.TimeStampBuffer.get(key);
+		    	TimeStamp<List<Integer>> messageVal=MessageStampBuffer.get(key);
 		    	this.TimeStampBuffer.put(key, myVal.max(messageVal));
 		    }
 		    else{

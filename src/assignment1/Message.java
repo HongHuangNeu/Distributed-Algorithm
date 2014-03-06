@@ -14,7 +14,7 @@ public class Message<T> implements Serializable {
 	private String message;
 	private int id;
 	private TimeStamp<T> sentAt;
-	private Map<Integer,VectorTimeStamp> TimeStampBuffer;
+	private Map<Integer,TimeStamp<List<Integer>>> TimeStampBuffer;
 	
 	public Message(String senderName, int senderIndex, String message, int id, TimeStamp<T> sentAt,String receiverName) {
 		this.senderName = senderName;
@@ -49,11 +49,11 @@ public class Message<T> implements Serializable {
 	{
 		return this.sentAt;
 	}
-	public Map<Integer, VectorTimeStamp> getTimeStampBuffer() {
+	public Map<Integer, TimeStamp<List<Integer>>> getTimeStampBuffer() {
 		return TimeStampBuffer;
 	}
 
-	public void setTimeStampBuffer(Map<Integer, VectorTimeStamp> timeStampBuffer) {
+	public void setTimeStampBuffer(Map<Integer, TimeStamp<List<Integer>>> timeStampBuffer) {
 		TimeStampBuffer = timeStampBuffer;
 	}
 
