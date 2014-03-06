@@ -38,14 +38,14 @@ public class Receiver extends Process<List<Integer>> {
 	public boolean determineDeliverable(Message<List<Integer>> message)
 	{
 		Map<Integer,TimeStamp<List<Integer>>> buffer=message.getTimeStampBuffer();
-		TimeStamp myTime=this.processClock.getCurrentTime();
+		TimeStamp<List<Integer>> myTime=this.processClock.getCurrentTime();
         if(!buffer.containsKey(this.processIndex))
         {
         	return true;
         }
-        else if(!buffer.get(this.processIndex).biggerThan(myTime)){
-       
-        return true;
+        else if(buffer.get(this.processIndex).compareTo(myTime) < 0)
+        {
+        	return true;
        
         }
 		return false;
