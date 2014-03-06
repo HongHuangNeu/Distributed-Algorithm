@@ -19,7 +19,7 @@ public class Sender extends Process<List<Integer>> {
 	}
 	public void getMessage(Message<List<Integer>> message)
 	{
-	    this.processClock.updateRecieved(message.getSentAt());
+	    //this.receive(message);
 	    updateBufferReceive(message.getTimeStampBuffer()); 
 	}
 	

@@ -8,27 +8,24 @@ import assignment1.clock.VectorTimeStamp;
 
 public class Message<T> implements Serializable {
 	private static final long serialVersionUID = -5836283489677344417L;
-	private String senderName;
+
 	private int senderIndex;
-	private String receiverName;
+	private int receiverIndex;
 	private String message;
 	private int id;
 	private TimeStamp<T> sentAt;
-	private Map<Integer,TimeStamp<List<Integer>>> TimeStampBuffer;
+	private Map<Integer,TimeStamp<T>> TimeStampBuffer;
 	
-	public Message(String senderName, int senderIndex, String message, int id, TimeStamp<T> sentAt,String receiverName) {
-		this.senderName = senderName;
+	public Message( int senderIndex, String message, int id, TimeStamp<T> sentAt,int receiverIndex,Map<Integer,TimeStamp<T>> timeStampBuffer) {
 		this.senderIndex = senderIndex;
 		this.message = message;
 		this.id = id;
 		this.sentAt = sentAt;
-		this.receiverName=receiverName;
+		this.receiverIndex=receiverIndex;
+		this.TimeStampBuffer=timeStampBuffer;
 	}
 	
-	public String getSenderName()
-	{
-		return this.senderName;
-	}
+	
 	
 	public int getSenderIndex()
 	{
@@ -49,20 +46,20 @@ public class Message<T> implements Serializable {
 	{
 		return this.sentAt;
 	}
-	public Map<Integer, TimeStamp<List<Integer>>> getTimeStampBuffer() {
+	public Map<Integer, TimeStamp<T>> getTimeStampBuffer() {
 		return TimeStampBuffer;
 	}
 
-	public void setTimeStampBuffer(Map<Integer, TimeStamp<List<Integer>>> timeStampBuffer) {
+	public void setTimeStampBuffer(Map<Integer, TimeStamp<T>> timeStampBuffer) {
 		TimeStampBuffer = timeStampBuffer;
 	}
 
-	public String getReceiverName() {
-		return receiverName;
+	public int getReceiverIndex() {
+		return receiverIndex;
 	}
 
-	public void setReceiverName(String receiverName) {
-		this.receiverName = receiverName;
+	public void setReceiverIndex(int receiverIndex) {
+		this.receiverIndex = receiverIndex;
 	}
 
 }
