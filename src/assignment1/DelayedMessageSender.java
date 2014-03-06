@@ -6,11 +6,11 @@ public class DelayedMessageSender<T> implements Runnable
 {
 	private RMI<T> from;
 	private RMI<T> to;
-	private Message<T> m;
+	private Message m;
 	
 	private long maxDelay = 0;
 	
-	public DelayedMessageSender(RMI<T> from, RMI<T> to, Message<T> m, long maxDelay)
+	public DelayedMessageSender(RMI<T> from, RMI<T> to, Message m, long maxDelay)
 	{
 		this.from = from;
 		this.to = to;
