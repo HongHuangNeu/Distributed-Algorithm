@@ -60,5 +60,13 @@ public class Message implements Serializable {
 	public void setReceiverIndex(int receiverIndex) {
 		this.receiverIndex = receiverIndex;
 	}
+	public String toString()
+	{
+		String s = "(";
 
+		s+=this.id;
+		s+=this.TimeStampBuffer.toString();
+
+		return s;
+	}
 }
