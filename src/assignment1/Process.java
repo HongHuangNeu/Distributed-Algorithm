@@ -96,7 +96,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	}
 	
 	public void run() {
-		for (int i = 0; i < 100; i++) {
+		for (int i = 0; i < 1000; i++) {
 			int j = i % 3;
 			if (processIndex != j) {
 				send("m", j);
