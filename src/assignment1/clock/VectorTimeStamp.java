@@ -38,7 +38,7 @@ public class VectorTimeStamp implements Serializable {
 
 	public List<Integer> getTime()
 	{
-		return this.time;
+		return new ArrayList<Integer>(this.time);
 	}
 
 	public VectorTimeStamp inc(int i)
@@ -58,6 +58,7 @@ public class VectorTimeStamp implements Serializable {
 		return new VectorTimeStamp(newTimes);
 	}
 
+	
 	public VectorTimeStamp max(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
@@ -110,4 +111,13 @@ public class VectorTimeStamp implements Serializable {
 			return false;
 		}
 	}
+	/*public String toString()
+	{
+		StringBuffer str=new StringBuffer();
+		for(int i:this.time)
+		{
+			str.append("process "+i+": "+time.get(i));
+		}
+		return str.toString();
+	}*/
 }

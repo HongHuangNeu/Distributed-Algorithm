@@ -20,9 +20,9 @@ public static Integer id=0;
 		}
 		
 		try{
-	Process p1=	new Process( 0, new VectorClock(3));
-	Process p2=	new Process( 1, new VectorClock(3));
-	Process p3=	new Process( 2, new VectorClock(3));
+	Process p1=	new Process( 0, new VectorClock(3,0));
+	Process p2=	new Process( 1, new VectorClock(3,1));
+	Process p3=	new Process( 2, new VectorClock(3,2));
 		new Thread(p1).start();
 		new Thread(p2).start();
 		new Thread(p3).start();

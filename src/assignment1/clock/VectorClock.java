@@ -7,17 +7,18 @@ public class VectorClock
 {
 	private VectorTimeStamp currentTime;
 	private int processId;
-	public VectorClock(int nProcesses)
+	public VectorClock(int nProcesses,int processId)
 	{
 		this.currentTime = new VectorTimeStamp(nProcesses);
+		this.processId=processId;
 	}
 
 	public VectorTimeStamp getCurrentTime()
 	{
-		return this.currentTime;
+		return new VectorTimeStamp(this.currentTime.getTime());
 	}
 
-	public void updateSent(int processId)
+	public void updateSent()
 	{
 		this.currentTime = this.currentTime.inc(processId);
 	}
