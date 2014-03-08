@@ -1,11 +1,12 @@
 package assignment1.clock;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VectorTimeStamp implements TimeStamp<List<Integer>> {
+public class VectorTimeStamp implements Serializable {
 
 	private List<Integer> time;
 
@@ -37,7 +38,7 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 
 	public List<Integer> getTime()
 	{
-		return this.time;
+		return new ArrayList<Integer>(this.time);
 	}
 
 	public VectorTimeStamp inc(int i)
@@ -57,7 +58,8 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 		return new VectorTimeStamp(newTimes);
 	}
 
-	public VectorTimeStamp max(TimeStamp<List<Integer>> other)
+	
+	public VectorTimeStamp max(VectorTimeStamp other)
 	{
 		List<Integer> maxTimes = new ArrayList<Integer>(other.getTime());
 
@@ -68,7 +70,22 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 
 		return new VectorTimeStamp(maxTimes);
 	}
-
+	//Hong added
+	public boolean biggerOrEqual(VectorTimeStamp than)
+	{
+		List<Integer> otherTimes = new ArrayList<Integer>(than.getTime());
+		
+		for(int i = 0; i < this.getTime().size(); i++)
+		{
+			if(this.getTime().get(i) < otherTimes.get(i))
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	@Override
 	public String toString()
 	{
@@ -84,4 +101,23 @@ public class VectorTimeStamp implements TimeStamp<List<Integer>> {
 
 		return s;
 	}
+	public boolean equals(Object o)
+	{
+		if(o instanceof VectorTimeStamp)
+		{
+			return this.getTime().equals(((VectorTimeStamp) o).getTime());
+		}
+		else{
+			return false;
+		}
+	}
+	/*public String toString()
+	{
+		StringBuffer str=new StringBuffer();
+		for(int i:this.time)
+		{
+			str.append("process "+i+": "+time.get(i));
+		}
+		return str.toString();
+	}*/
 }
