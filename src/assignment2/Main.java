@@ -34,12 +34,14 @@ public static PrintWriter writer ;
 			e1.printStackTrace();
 		}
 		try{
-	Component p1=	new Component( 0, 3);
-	Component p2=	new Component( 1, 3);
-	Component p3=	new Component( 2, 3);
+	Component p1=	new Component( 0, 4);
+	Component p2=	new Component( 1, 4);
+	Component p3=	new Component( 2, 4);
+	Component p4=	new Component( 3, 4);
 		new Thread(p1).start();
 		new Thread(p2).start();
 		new Thread(p3).start();
+		new Thread(p4).start();
 		}catch(RemoteException e)
 		{
 			e.printStackTrace();

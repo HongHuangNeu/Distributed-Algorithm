@@ -33,4 +33,26 @@ public class Token extends Message{
 	{
 		TN[index]=n;
 	}
+	public String N(int[] n)
+	{
+		String string="";
+		for(int i:n)
+		{
+			string+=i;
+		}
+		return string;
+	}
+	public String S(State[] s)
+	{
+		String string="";
+		for(State i:s)
+		{
+			string+=i;
+		}
+		return string;
+	}
+	public String toString()
+	{
+	return "token state"+N(this.TN)+this.S(this.TS);	
+	}
 }
