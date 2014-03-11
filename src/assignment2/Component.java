@@ -31,7 +31,7 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 	private int totalNumber;
 	private Token token=null;
 	private int maxDelay=1000;
-	private int requestNum=5;
+	private int requestNum=1000;
 	private int index;
 	public Component(int componentIndex,int totalNumber)
 			throws RemoteException{
@@ -282,7 +282,7 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		System.out.println("component"+this.componentId+"request resource"+N(this.N)+" "+S(this.S));
 		S[this.componentId]=State.Request;
 		N[this.componentId]++;
-	
+		boolean flag=false; 
 		for(int i=0;i<this.totalNumber;i++)
 		{
 			if(i!=this.componentId&&S[i].equals(State.Request))
@@ -290,9 +290,18 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 				if(this.componentId==0)
 				System.out.println("component"+this.componentId+"sends request to"+i);
 				send(new Request(this.componentId,N[this.componentId]),i);
-				
+				flag=true;
 			}
 		
+		}
+		if(!flag)//TODO
+		{
+			System.out.println("not sending anyone");
+			if(this.token!=null)
+			{
+				System.out.println("Wow I have the token!");
+				processToken(this.token);
+			}
 		}
 	}
 	}
