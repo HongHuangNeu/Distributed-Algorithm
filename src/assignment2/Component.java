@@ -23,7 +23,7 @@ import assignment1.clock.VectorTimeStamp;
 //@SuppressWarnings("serial")
 public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		Runnable, Serializable {
-	
+	private boolean sentRequest;
 	private static final long serialVersionUID = 7247714666080613254L;
 	private State[] S;
 	private int[] N;
@@ -118,6 +118,7 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		this.token=token;
 		S[this.componentId]=State.Execute;
 		criticalSection();
+		this.sentRequest=false;
 		S[this.componentId]=State.Other;
 		token.setTSelement(this.componentId, State.Other);
 		
@@ -169,6 +170,13 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 	{
 		
 		System.out.println(this.componentId+"start critical section"+N(this.N)+" "+S(this.S));		
+long delay = this.generateDelay();
+		
+		try
+		{
+			Thread.sleep(delay);
+		}catch(Exception e)
+		{}
 		System.out.println(this.componentId+"finish critical section");
 	}
 	public void processRequest(Request request)
@@ -214,22 +222,23 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		
 	}
 	public void run() {
-		for (int i = 0; i < 1000; i++) {
+		this.sentRequest=false;
+		int i=0;
+		while(i<5) {
 			
-			if(S[this.componentId]!=State.Hold&&S[this.componentId]!=State.Execute)
-			this.request();
-			
-			while(S[this.componentId]==State.Request)
+			if(S[this.componentId]!=State.Hold&&S[this.componentId]!=State.Execute&&sentRequest==false)
 			{
-		
+				this.request();
+				this.sentRequest=true;
+				i++;
 			}
 			
-			while(S[this.componentId]==State.Execute||S[this.componentId]==State.Hold)
-			{	
+			
+			
+			
 			}
-			System.out.println(this.componentId+" "+i+"rounds");
-			}
-		System.out.println(this.componentId+"sent all request");
+		System.out.println(this.componentId+"all request sent");
+		while(true){}
 	}
 	public void request()
 	{
