@@ -31,6 +31,8 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 	private int totalNumber;
 	private Token token=null;
 	private int maxDelay=1000;
+	private int requestNum=5;
+	private int index;
 	public Component(int componentIndex,int totalNumber)
 			throws RemoteException{
 		super();
@@ -38,6 +40,8 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		N=new int[totalNumber];
 		componentId=componentIndex;
 		this.totalNumber=totalNumber;
+		this.sentRequest=false;
+		this.index=this.requestNum;
 		for(int i=0;i<N.length;i++)
 		{
 			N[i]=0;
@@ -111,7 +115,8 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		}
 	}
 	public void processToken(Token token)
-	{
+	{ 
+		this.index--;
 		synchronized(this)	{
 			System.out.println("componnet "+this.componentId+"granted critical section!"+N(this.N)+" "+S(this.S));
 			System.out.println("enter in"+this.componentId+token);
@@ -135,8 +140,14 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 				S[i]=token.getTS()[i];
 			}
 		}
+		if(index==0)
+		{
+			System.out.println(this.componentId+"all request sent");
+		}
 		System.out.println(token);
 		System.out.println("self state"+this.componentId+N(N)+" "+S(S));
+		
+		
 		if(noRequest())
 		{
 			S[this.componentId]=State.Hold;
@@ -152,6 +163,8 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 				}
 			}
 		}
+	
+		
 		
 		}
 	}
@@ -166,11 +179,24 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 		
 		return true;
 	}
+	public void gap()
+	{
+		
+			
+		long delay = this.generateDelay();
+		
+		try
+		{
+			Thread.sleep(delay);
+		}catch(Exception e)
+		{}
+		System.out.println(this.componentId+"want to sent new request!");
+	}
 	public void criticalSection()
 	{
 		
 		System.out.println(this.componentId+"start critical section"+N(this.N)+" "+S(this.S));		
-long delay = this.generateDelay();
+		long delay = this.generateDelay();
 		
 		try
 		{
@@ -222,22 +248,31 @@ long delay = this.generateDelay();
 		
 	}
 	public void run() {
+	
 		this.sentRequest=false;
 		int i=0;
-		while(i<5) {
-			
+		while(i<this.requestNum) {
+
 			if(S[this.componentId]!=State.Hold&&S[this.componentId]!=State.Execute&&sentRequest==false)
 			{
+				gap();
 				this.request();
 				this.sentRequest=true;
 				i++;
 			}
-			
-			
-			
-			
+			if(S[this.componentId]==State.Hold&&i<this.requestNum)
+			{
+				gap();
+				this.request();
+				this.sentRequest=true;
+				i++;
 			}
-		System.out.println(this.componentId+"all request sent");
+
+
+
+
+			}
+		
 		while(true){}
 	}
 	public void request()
