@@ -62,10 +62,10 @@ public class Message implements Serializable {
 	}
 	public String toString()
 	{
-		String s = "(";
+		String s = "";
 
-		s+=this.id;
-		s+=this.TimeStampBuffer.toString();
+		s+=this.id + " ";
+		s+=this.sentAt;
 
 		return s;
 	}

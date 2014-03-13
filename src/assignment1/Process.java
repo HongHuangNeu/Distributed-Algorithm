@@ -1,18 +1,22 @@
 package assignment1;
 
 import java.io.Serializable;
+import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+
 
 
 import assignment1.clock.VectorClock;
@@ -26,7 +30,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	protected int processIndex;
 	protected VectorClock processClock;
 	public static int round = 0;
-	
+	private int messagesSent = 0;
 	
 	private Map<Integer,VectorTimeStamp> timeStampBuffer;   //Local Buffer
 	public ArrayList<Message> messageBuffer=new ArrayList<Message>();// Buffer to include undelivered message
@@ -39,79 +43,86 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		this.processClock=clock;
 		timeStampBuffer=new HashMap();
 		try {
+			
 			Registry registry = LocateRegistry.getRegistry(4303);
-			registry.rebind(Integer.toString(processIndex), this);
-			System.out.println("bind successful");
-			System.setProperty("java.security.policy", Process.class
-			.getResource("my.policy").toString());
+			registry.bind(Integer.toString(processIndex), this);
+			System.out.println("[" + this.processIndex + "] bind successful");
 		}
-		catch (Exception e) {
+		catch(RemoteException e)
+		{
+			System.out.println("remoteException");
 			e.printStackTrace();
-			System.out.println("Bind fail");
+		}
+		catch(AlreadyBoundException e)
+		{
+			System.out.println("already Bound");
+			e.printStackTrace();
 		}
 
 	}
 
 	public void send(String m, int receiverIndex)
 	{
-		
-		
-		try
+		boolean succes = false;
+		do
 		{
-			
-			// wrap message contents m into message object
-			Message mObj;
-			synchronized(this)
+			try
 			{
-			// notify the clock
-			this.processClock.updateSent();
-		
+				// wrap message contents m into message object
+				Message mObj;
+				synchronized(this)
+				{
+				// notify the clock
+				this.processClock.updateSent();
 			
-				//System.out.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
+				
+				//System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " number before send"+(Main.id+1)+this.processClock.getCurrentTime());
 				//Main.writer.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
 				
 				mObj = new Message(this.processIndex, m, Main.id++,this.processClock.getCurrentTime(),receiverIndex,copyBuffer(this.timeStampBuffer));
 				//logging
-				System.out.println("sent to process " + receiverIndex + "from process "
-							+ processIndex + " message number:" + mObj.getId());
 			
 				updateBufferAfterSend(receiverIndex);
+				}
+				//System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
+				// get the proxy object
+				Registry registry = LocateRegistry.getRegistry("127.0.0.1",
+						4303);
+				RMI reciever = (RMI) registry.lookup(Integer.toString(receiverIndex));
+				
+				// send the message
+				this.messagesSent++;
+				succes = true;
+				DelayedMessageSender sender = new DelayedMessageSender(this.processIndex, this.processClock.getCurrentTime(), reciever, mObj, 1000);
+				new Thread(sender).start();
+				
 			}
-			//System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
-			// get the proxy object
-			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
-					4303);
-			RMI<T> reciever = (RMI<T>) registry.lookup(Integer.toString(receiverIndex));
-			
-			// send the message
-			DelayedMessageSender<T> sender = new DelayedMessageSender<T>(this, reciever, mObj, 1000);
-			new Thread(sender).start();
-			
+			catch (Exception e)
+			{
+				//System.out.println("[" + this.processIndex + "]" + this.getProcessClock().getCurrentTime() + " recipient not found.");
+				e.printStackTrace();
+			}
 		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-
-		}
+		while (!succes);
 	}
 	
 	public void run() {
-		for (int i = 0; i < 1000; i++) {
-			int j = i % 3;
+		while(this.messagesSent < 10)
+		{
+			int j = this.messagesSent % 2;
 			if (processIndex != j) {
 				send("m", j);
 			}
 		}
-		System.out.println("finish sending");
+		while(true);
 	}
 	
-	public void receive(Message message) throws RemoteException {
+	synchronized public void receive(Message message) throws RemoteException {
 		// notify the clock
 		
-		System.out.println(processIndex + " receive from process "
-				+ message.getSenderIndex() + " message:" + message.getMessage()
-				+ " message number " + message.getId()+"vector clock is "+message.getTimeStampBuffer()+" local clock "+this.processClock.getCurrentTime());
-
+		System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " receive from process "
+				+ message.getSenderIndex() + " message: " + message);
+		
 		synchronized(this){
 			if(this.canDeliver(message))
 			{
@@ -123,7 +134,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 			}
 			else
 			{
-				System.out.println("buffer messgae"+message.getId());
+				System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " buffer message " + message);
 				this.messageBuffer.add(message);
 			}
 		}
@@ -134,27 +145,22 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 		
 		Message toDeliver = null;
 		
-		
-			
-			for(Message m : this.messageBuffer)
+		for(Message m : this.messageBuffer)
+		{
+			toDeliver = null;
+			System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " try to deliver message " + m);
+			if(this.canDeliver(m))
 			{
-				toDeliver = null;
+				//Deliverable message found!
+				toDeliver = m;
+				//local time stamp changes here
+				this.messageBuffer.remove(m);
 				
-				if(this.canDeliver(m))
-				{
-					//Deliverable message found!
-					toDeliver = m;
-					//local time stamp changes here
-					this.messageBuffer.remove(m);
-					
-					this.deliver(toDeliver);
-					return false;
-				}
+				this.deliver(toDeliver);
+				return false;
 			}
-	
-			
-		System.out.println("process "+this.processIndex+ "remaining sie "+this.messageBuffer.size()+"my clock is"+this.processClock.getCurrentTime());
-		System.out.println("process "+this.processIndex+ "remaining "+this.messageBuffer);
+		}
+		
 		return true;
 	}
 	
@@ -175,7 +181,7 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 
 		this.mergeLocalBuffer(m);
 		this.processClock.updateRecieved(m.getSentAt());
-		System.out.println("deliver "+m.getId()+"to process "+this.processIndex);
+		System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " deliver "+m);
 	}
 	
 	public void mergeLocalBuffer(Message message)
@@ -202,6 +208,11 @@ public class Process<T> extends UnicastRemoteObject implements RMI<T>,
 	public int getProcessIndex()
 	{
 		return this.processIndex;
+	}
+	
+	public VectorClock getProcessClock()
+	{
+		return this.processClock;
 	}
 	
 	public void updateBufferAfterSend(int receiverIndex)
