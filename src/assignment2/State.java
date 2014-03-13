@@ -1,34 +1,25 @@
 package assignment2;
 
-public enum State
-{
-	Request
-	{
-		public String toString()
-		{
+public enum State {
+	Request {
+		public String toString() {
 			return "R";
 		}
 	},
-	Execute
-	{
-		public String toString()
-		{
+	Execute {
+		public String toString() {
 			return "E";
 		}
 	},
-	Hold
-	{
-		public String toString()
-		{
+	Hold {
+		public String toString() {
 			return "H";
 		}
 	},
-	Other
-	{
-		public String toString()
-		{
+	Other {
+		public String toString() {
 			return "O";
 		}
 	}
-	
+
 }
