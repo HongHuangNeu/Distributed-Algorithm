@@ -42,7 +42,7 @@ public static PrintWriter writer ;
 				e1.printStackTrace();
 			}
 			try{
-				Process p = new Process( processIndex, new VectorClock(processes, processIndex));
+				Process p = new Process( processIndex, processes, new VectorClock(processes, processIndex));
 				new Thread(p).start();
 			}
 			catch(RemoteException e)
