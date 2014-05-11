@@ -5,12 +5,12 @@ import java.rmi.RemoteException;
 public class DelayedMessageSender<T> implements Runnable
 {
 
-	private RMI<T> to;
+	private RMI to;
 	private Message m;
 	
 	private long maxDelay = 0;
 	
-	public DelayedMessageSender( RMI<T> to, Message m, long maxDelay)
+	public DelayedMessageSender( RMI to, Message m, long maxDelay)
 	{
 	
 		this.to = to;

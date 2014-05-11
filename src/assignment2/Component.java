@@ -11,8 +11,10 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 
 import assignment2.DelayedMessageSender;
@@ -21,43 +23,51 @@ import assignment1.clock.VectorClock;
 import assignment1.clock.VectorTimeStamp;
 
 //@SuppressWarnings("serial")
-public class Component<T> extends UnicastRemoteObject implements RMI<T>,
+public class Component extends UnicastRemoteObject implements RMI,
 		Runnable, Serializable {
-	private boolean sentRequest;
 	private static final long serialVersionUID = 7247714666080613254L;
-	private State[] S;
-	private int[] N;
+	private int LN;
+	private float FN;
+	private State SN=State.Sleep;
+	private int in_branch;
+	private int test_edge=Accept.Initial;
+	private int best_edge;
+	private float best_weight;
+	private int find_count;
+	private float[] adjacent;
+	Queue<Message> queue = new LinkedList<Message>(); 
+	/*
+	 * LN=0;
+			SN=State.Found;
+			find_count=0;
+	 * */
+	
+	private ArrayList<Integer> unknown_inMST=new ArrayList<Integer>();
+	private ArrayList<Integer> not_inMST=new ArrayList<Integer>();
+	private ArrayList<Integer> inMST=new ArrayList<Integer>();
+	
 	private int componentId;
 	private int totalNumber;
-	private Token token=null;
 	private int maxDelay=1000;
-	private int requestNum=1000;
-	private int index;
-	public Component(int componentIndex,int totalNumber)
+	
+	
+	public Component(int componentIndex,int totalNumber,float[] adjacent)
 			throws RemoteException{
 		super();
-		S=new State[totalNumber];
-		N=new int[totalNumber];
-		componentId=componentIndex;
+		this.componentId=componentIndex;
 		this.totalNumber=totalNumber;
-		this.sentRequest=false;
-		this.index=this.requestNum;
-		for(int i=0;i<N.length;i++)
+		this.adjacent=new float[totalNumber];
+		for(int i=0;i<adjacent.length;i++)
 		{
-			N[i]=0;
+			this.adjacent[i]=adjacent[i];
 		}
-		for(int i=0;i<this.componentId;i++)
+		for(int i=0;i<this.adjacent.length;i++)
 		{
-			S[i]=State.Request;
-		}
-		for(int i=this.componentId;i<totalNumber;i++)
-		{
-			S[i]=State.Other;
-		}
-		if(componentId==0)
-		{
-			S[0]=State.Hold;
-			token=new Token(totalNumber);
+			
+			if(this.adjacent[i]!=Float.MAX_VALUE)
+			{
+				this.unknown_inMST.add(i);
+			}
 		}
 		
 		try {
@@ -71,8 +81,7 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 			e.printStackTrace();
 			System.out.println("Bind fail");
 		}
-		System.out.println(this.componentId+S(this.S));
-		System.out.println(this.componentId+N(this.N));
+		
 	}
 	
 	
@@ -100,11 +109,11 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
-			RMI<T> reciever = (RMI<T>) registry.lookup(Integer.toString(receiverIndex));
+			RMI reciever = (RMI) registry.lookup(Integer.toString(receiverIndex));
 			
 			// send the message
 			//reciever.receive(mObj);
-			DelayedMessageSender<T> sender = new DelayedMessageSender<T>(reciever, mObj, 0);
+			DelayedMessageSender sender = new DelayedMessageSender(reciever, mObj, 0);
 			new Thread(sender).start();
 			
 		}
@@ -114,236 +123,361 @@ public class Component<T> extends UnicastRemoteObject implements RMI<T>,
 
 		}
 	}
-	public void processToken(Token token)
-	{ 
-		this.index--;
-		synchronized(this)	{
-			System.out.println("componnet "+this.componentId+"granted critical section!"+N(this.N)+" "+S(this.S));
-			System.out.println("enter in"+this.componentId+token);
-		this.token=token;
-		S[this.componentId]=State.Execute;
-		criticalSection();
-		this.sentRequest=false;
-		S[this.componentId]=State.Other;
-		token.setTSelement(this.componentId, State.Other);
-		
-		for(int i=0;i<this.totalNumber;i++)
-		{
-			if(N[i]>token.getTN()[i])
+	
+	public void processChangeRoot()
+	{
+		change_root();
+	}
+	public void report()
+	{
+		synchronized(this){
+			if(find_count==0&&this.test_edge==0)
 			{
-				token.setTNelement(i, N[i]);
-				token.setTSelement(i, S[i]);
-			}
-			else
-			{
-				N[i]=token.getTN()[i];
-				S[i]=token.getTS()[i];
+				SN=State.Found;
+				this.send(new Report(this.componentId,this.best_weight),this.in_branch);
 			}
 		}
-		if(index==0)
-		{
-			System.out.println(this.componentId+"all request sent");
-		}
-		System.out.println(token);
-		System.out.println("self state"+this.componentId+N(N)+" "+S(S));
-		
-		
-		if(noRequest())
-		{
-			S[this.componentId]=State.Hold;
-		}else
-		{  
-			for(int i=0;i<S.length;i++)
+	}
+	public void processReport(Report msg)
+	{
+		synchronized(this){
+			if(msg.getSenderId()!=in_branch)
 			{
-				if(S[i]==State.Request)
+				find_count--;
+				if(msg.getBest_weight()<best_weight)
 				{
-					this.send(newToken(token), i);
-					token=null;
-					return;
+					best_weight=msg.getBest_weight();
+					best_edge=msg.getSenderId();
+				}
+				report();
+			}
+			else{
+				if(SN.equals(State.Find))
+				{
+					queue.offer(msg);
+				}else{
+					if(msg.getBest_weight()>best_weight)
+					{
+						change_root();
+					}else{
+						if(msg.getBest_weight()==best_weight&&msg.getBest_weight()==Float.MAX_VALUE)
+						{
+							System.out.println(this.componentId+"Halt");
+						}
+					}
 				}
 			}
 		}
-	
-		
-		
-		}
 	}
-	public boolean noRequest()
-	{
-		
-		for(int i=0;i<S.length;i++)
-		{
-		   if(i!=this.componentId&&!S[i].equals(State.Other))
-		   {return false;}
-		}
-		
-		return true;
-	}
-	public void gap()
-	{
-		
-			
-		long delay = this.generateDelay();
-		
-		try
-		{
-			Thread.sleep(delay);
-		}catch(Exception e)
-		{}
-		System.out.println(this.componentId+"want to sent new request!");
-	}
-	public void criticalSection()
-	{
-		
-		System.out.println(this.componentId+"start critical section"+N(this.N)+" "+S(this.S));		
-		long delay = this.generateDelay();
-		
-		try
-		{
-			Thread.sleep(delay);
-		}catch(Exception e)
-		{}
-		System.out.println(this.componentId+"finish critical section");
-	}
-	public void processRequest(Request request)
+	public void wakeup()
 	{
 		synchronized(this){
-		System.out.println(this.componentId+"get request from"+request.getSenderId());
-	
-		N[request.getSenderId()]=request.getNumOfRequest();
-		switch(S[this.componentId])
-		{
-		case Other:
-			S[request.getSenderId()]=State.Request;
-			System.out.println("process "+this.componentId+"is in Other");	
-			break;
-		case Execute:
-			S[request.getSenderId()]=State.Request;
-			System.out.println("process "+this.componentId+"is executing");	
-			break;
-		case Request:
-			if(!S[request.getSenderId()].equals(State.Request))
+			int j=adjacentMinimalEdge();
+			System.out.println(unknown_inMST);
+			this.delUnknownInMst(j);
+			//this.unknown_inMST.remove(j);
+			this.delNotInMst(j);
+			//this.not_inMST.remove(j);
+			inMST.add(j);//single
+			LN=0;
+			SN=State.Found;
+			find_count=0;
+			this.send(new Connect(this.componentId,0),j);
+		}
+	}
+	public void change_root()
+	{
+		synchronized(this){	
+			if(inMST.contains(this.best_edge))
 			{
-				System.out.println("process "+this.componentId+"is Request");	
-				S[request.getSenderId()]=State.Request;
-				send(new Request(this.componentId,N[this.componentId]),request.getSenderId());
+				this.send(new ChangeRoot(this.componentId), this.best_edge);
 			}
-			break;
-		case Hold:
-			S[request.getSenderId()]=State.Request;
-			S[this.componentId]=State.Other;
-			System.out.println("process "+this.componentId+"is holding and send to"+request.getSenderId());	
-
-			if(token==null){System.out.println("token is null!");}
-			token.setTSelement(request.getSenderId(), State.Request);// bug Hold but token is null
-			token.setTNelement(request.getSenderId(), request.getNumOfRequest());
+			else
+			{
+				this.send(new Connect(this.componentId,LN), this.best_edge);
+				System.out.println(unknown_inMST);
+				this.delUnknownInMst(best_edge);
+				//this.unknown_inMST.remove(this.best_edge);
+				this.delNotInMst(best_edge);
+				//this.not_inMST.remove(this.best_edge);
+				inMST.add(this.best_edge);//single
+			}
+		}
+	}
+	public void processInitial(Initiate msg)
+	{
+		synchronized(this){
+			LN=msg.getL();
+			FN=msg.getF();
+			SN=msg.getS();
+			in_branch=msg.getSenderId();
+			best_edge=Accept.Initial;
+			best_weight=Float.MAX_VALUE;
+			for(int i=0;i<adjacent.length;i++)
+			{
+				if(adjacent[i]!=Float.MAX_VALUE&&i!=msg.getSenderId()&&inMST.contains(i))
+				{
+					send(new Initiate(this.componentId,msg.getL(),FN=msg.getF(),SN=msg.getS()),i);
+					if(msg.getS().equals(State.Find))
+					{
+						find_count++;
+					}
+				}
+			}
+			if(msg.getS().equals(State.Find))
+			test();
 			
-			send(newToken(token),request.getSenderId());
-			System.out.println("process"+this.componentId+"gives token to"+request.getSenderId()+" "+S(S)+" "+N(N));
-			System.out.println("after give:"+token);
-			token=null;
-			break;
 		}
+	}
+	
+	public void test()
+	{
+		synchronized(this){	
+			if(this.unknown_inMST.size()!=0)
+			{
+				test_edge=this.unknowMinimumEdge();
+				send(new Test(this.componentId,LN,FN),test_edge);
+			}else{
+				test_edge=Accept.Initial;
+				report();
+			}
 		}
-		
+	}
+	
+	public void processConnect(Connect msg)
+	{
+		synchronized(this){
+			if(SN.equals(State.Sleep))
+			{
+				wakeup();
+			}
+			if(msg.getL()<LN)
+			{
+				System.out.println(unknown_inMST);
+				//this.unknown_inMST.remove(msg.getSenderId());
+				this.delUnknownInMst(msg.getSenderId());
+				//this.not_inMST.remove(msg.getSenderId());
+				this.delNotInMst(msg.getSenderId());
+				inMST.add(msg.getSenderId());//single
+				send(new Initiate(this.componentId,LN,FN,SN),msg.getSenderId());
+				if(SN.equals(State.Find))
+				{
+					find_count++;
+				}
+			}
+			else{
+				if(this.unknown_inMST.contains(msg.getSenderId()))
+				{
+					this.queue.offer(msg);
+				}
+				else{
+					send(new Initiate(this.componentId,LN+1,adjacent[msg.getSenderId()],State.Find),msg.getSenderId());
+				}
+			}
+		}
+	}
+	public void processTest(Test msg)
+	{
+		synchronized(this){
+			if(SN.equals(State.Sleep))
+			{
+				wakeup();
+			}
+			if(msg.getL()>LN)
+			{
+				queue.offer(msg);
+			}else{
+				if(msg.getF()!=FN)
+				{
+					send(new Accept(this.componentId),msg.getSenderId());
+				}else{
+					/*if (SE(j) = ?_in_MST) then SE(j) := not_in_MST 
+	               if (test-edge ¡Ù j) then send(reject) on edge j  
+	               else test()*/
+					
+					if(this.unknown_inMST.contains(msg.getSenderId()))
+					{
+						System.out.println(unknown_inMST);
+						//this.unknown_inMST.remove(msg.getSenderId());
+						this.delUnknownInMst(msg.getSenderId());
+						//this.inMST.remove(msg.getSenderId());
+						this.delInMst(msg.getSenderId());
+						this.not_inMST.add(msg.getSenderId());//single
+					}
+					if(test_edge!=msg.getSenderId())
+					{
+						send(new Reject(msg.getSenderId()),msg.getSenderId());
+					}else{
+						test();
+					}
+				}
+			}
+		}
+	}
+	public void processAccept(Accept msg)
+	{
+		synchronized(this){
+			test_edge=Accept.Initial;
+			if(adjacent[msg.getSenderId()]<best_weight)
+			{
+				best_edge=msg.getSenderId();
+				best_weight=adjacent[msg.getSenderId()];
+			}
+			report();
+		}
+	}
+	public void processReject(Reject msg)
+	{
+		synchronized(this){
+			if(this.unknown_inMST.contains(msg.getSenderId()))
+			{
+				System.out.println(unknown_inMST);
+				//this.unknown_inMST.remove(msg.getSenderId());
+				this.delUnknownInMst(msg.getSenderId());
+				//this.inMST.remove(msg.getSenderId());
+				this.delInMst(msg.getSenderId());
+				this.not_inMST.add(msg.getSenderId());//single
+			}
+			test();
+		}
 	}
 	public void run() {
 	
-		this.sentRequest=false;
-		int i=0;
-		while(i<this.requestNum) {
-
-			if(S[this.componentId]!=State.Hold&&S[this.componentId]!=State.Execute&&sentRequest==false)
-			{
-				gap();
-				this.request();
-				this.sentRequest=true;
-				i++;
-			}
-			if(S[this.componentId]==State.Hold&&i<this.requestNum)
-			{
-				gap();
-				this.request();
-				this.sentRequest=true;
-				i++;
-			}
-
-
-
-
-			}
-		
-		while(true){}
+		while(SN.equals(State.Sleep))
+		{
+			wakeup();
+		}
+		while(true){
+			processDelayedMessage();		
+		}
 	}
-	public void request()
+	public void processDelayedMessage()
 	{
-	synchronized(this){
-		if(this.componentId==0)
-		System.out.println("component"+this.componentId+"request resource"+N(this.N)+" "+S(this.S));
-		S[this.componentId]=State.Request;
-		N[this.componentId]++;
-		boolean flag=false; 
-		for(int i=0;i<this.totalNumber;i++)
+		while(queue.size()!=0)
 		{
-			if(i!=this.componentId&&S[i].equals(State.Request))
+			synchronized(this)
 			{
-				if(this.componentId==0)
-				System.out.println("component"+this.componentId+"sends request to"+i);
-				send(new Request(this.componentId,N[this.componentId]),i);
-				flag=true;
-			}
-		
-		}
-		if(!flag)//TODO
-		{
-			System.out.println("not sending anyone");
-			if(this.token!=null)
-			{
-				System.out.println("Wow I have the token!");
-				processToken(this.token);
+				Message m=queue.poll();
+				if(m!=null)
+				{	try {
+						System.out.println(this.componentId+" processDelayed");
+						this.receive(m);
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						System.out.println("re handling exception!");
+					}
+				}
 			}
 		}
-	}
 	}
 	public  void receive(Message message) throws RemoteException {
 		// notify the clock
 		
-		if(message instanceof Request)
+		if(message instanceof Connect)
 		{
-			processRequest((Request)message);
+			this.processConnect((Connect)message);
+	//		processRequest((Request)message);
 		}
-		if(message instanceof Token)
+		if(message instanceof ChangeRoot)
 		{
-			processToken((Token)message);
+			this.processChangeRoot();
+	//		processRequest((Request)message);
 		}
+		if(message instanceof Accept)
+		{
+			this.processAccept((Accept)message);
+	//		processRequest((Request)message);
+		}
+		if(message instanceof Initiate)
+		{
+			this.processInitial((Initiate)message);
+	//		processRequest((Request)message);
+		}
+		if(message instanceof Reject)
+		{
+			this.processReject((Reject)message);
+	//		processRequest((Request)message);
+		}
+		if(message instanceof Report)
+		{
+			this.processReport((Report)message);
+	//		processRequest((Request)message);
+		}
+		if(message instanceof Test)
+		{
+			this.processTest((Test)message);
+	//		processRequest((Request)message);
+		}
+
 	}
 	private long generateDelay()
 	{
 		return Math.round(Math.random() * this.maxDelay);
 	}
-	public Token newToken(Token token)
+	public int adjacentMinimalEdge()
 	{
-		Token t=new Token(this.totalNumber);
-		t.setTN(token.getTN());
-		t.setTS(token.getTS());
-		return t;
-	}
-	public String N(int[] n)
-	{
-		String string="";
-		for(int i:n)
-		{
-			string+=i;
+		synchronized(this){
+			int index=0;
+			float min=Float.MAX_VALUE;
+			for(int j=0;j<this.adjacent.length;j++)
+			{
+				if(this.adjacent[j]>0&&this.adjacent[j]<min)
+				{
+					index=j;
+					min=this.adjacent[j];
+				}
+			}
+			return index;
 		}
-		return string;
 	}
-	public String S(State[] s)
+	public void delInMst(int item)
 	{
-		String string="";
-		for(State i:s)
+		for(int i=0;i<this.inMST.size();i++)
 		{
-			string+=i;
+			if(inMST.get(i)==item)
+			{
+				inMST.remove(i);
+				return;
+			}
 		}
-		return string;
 	}
+	public void delNotInMst(int item)
+	{
+		for(int i=0;i<this.not_inMST.size();i++)
+		{
+			if(not_inMST.get(i)==item)
+			{
+				not_inMST.remove(i);
+				return;
+			}
+		}
+	}
+	public void delUnknownInMst(int item)
+	{
+		for(int i=0;i<this.unknown_inMST.size();i++)
+		{
+			if(unknown_inMST.get(i)==item)
+			{
+				unknown_inMST.remove(i);
+				return;
+			}
+		}
+	}
+	public int unknowMinimumEdge()
+	{
+		synchronized(this){
+			int index=0;
+			float min=Float.MAX_VALUE;
+			for(int i:this.unknown_inMST)
+			{
+				if(this.adjacent[i]<min)
+				{
+					index=i;
+					min=adjacent[i];
+				}
+			}
+			return index;
+		}
+	}
+	
 }
