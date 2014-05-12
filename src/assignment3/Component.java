@@ -1,4 +1,4 @@
-package assignment2;
+package assignment3;
 
 import java.io.Serializable;
 import java.rmi.Naming;
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Queue;
 
 
-import assignment2.DelayedMessageSender;
+import assignment3.DelayedMessageSender;
 import assignment1.Process;
 import assignment1.clock.VectorClock;
 import assignment1.clock.VectorTimeStamp;

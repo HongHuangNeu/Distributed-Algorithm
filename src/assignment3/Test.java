@@ -1,4 +1,4 @@
-package assignment2;
+package assignment3;
 
 public class Test extends Message{
 private int L;
