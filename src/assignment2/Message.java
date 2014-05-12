@@ -19,5 +19,8 @@ public class Message implements Serializable {
 	public void setSenderId(int senderId) {
 		this.senderId = senderId;
 	}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 	
 }
