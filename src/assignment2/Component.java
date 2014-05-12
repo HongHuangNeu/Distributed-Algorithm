@@ -35,6 +35,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private float best_weight;
 	private int find_count;
 	private float[] adjacent;
+	private int c=0;
 	Queue<Message> queue = new LinkedList<Message>(); 
 	/*
 	 * LN=0;
@@ -91,7 +92,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void send(Message m, int receiverIndex)
 	{
 		
-		
+		if(m instanceof Report)
+		{
+			if(receiverIndex==2)
+			{
+				System.out.println("report sent");
+			}
+		}
 		try
 		{
 			
@@ -135,12 +142,17 @@ public class Component extends UnicastRemoteObject implements RMI,
 			if(find_count==0&&this.test_edge==Accept.Initial)
 			{
 				SN=State.Found;
+				if(this.componentId==2)
+				System.out.println("component"+this.componentId+"sent report msg with weight"+this.best_weight+"to"+this.in_branch);
 				this.send(new Report(this.componentId,this.best_weight),this.in_branch);
+				System.out.println(this.componentId+"report"+this.c+++"in MST:"+inMST+"not in MST:"+not_inMST);
+				
 			}
 		}
 	}
 	public void processReport(Report msg)
 	{
+		
 		System.out.println(this.componentId+"process msg report"+msg.getSerialversionuid());
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
@@ -346,12 +358,18 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void run() {
-	
+	boolean flag=true;
 		while(SN.equals(State.Sleep))
 		{
 			wakeup();
 		}
 		while(true){
+			
+			if(this.componentId==2&&queue.size()==0&&flag)
+			{
+				System.out.println("2true");
+				flag=false;
+			}
 			processDelayedMessage();		
 		}
 	}
