@@ -34,14 +34,16 @@ public static PrintWriter writer ;
 			e1.printStackTrace();
 		}
 		try{
-			float[] arr1={Float.MAX_VALUE,1,3};
-			float[] arr2={1,Float.MAX_VALUE,2};
-			float[] arr3={3,2,Float.MAX_VALUE};
+			float[] arr0={Float.MAX_VALUE,1,5,2};
+			float[] arr1={1,Float.MAX_VALUE,3,4};
+			float[] arr2={5,3,Float.MAX_VALUE,6};
+			float[] arr3={2,4,6,Float.MAX_VALUE};
 			
-	Component p1=	new Component( 0, 3,arr1);
-	Component p2=	new Component( 1, 3,arr2);
-	Component p3=	new Component( 2, 3,arr3);
-
+	Component p0=	new Component( 0, 4,arr0);
+	Component p1=	new Component( 1, 4,arr1);
+	Component p2=	new Component( 2, 4,arr2);
+	Component p3=	new Component( 3, 4,arr3);
+	    new Thread(p0).start();
 		new Thread(p1).start();
 		new Thread(p2).start();
 		new Thread(p3).start();

@@ -74,13 +74,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 		try {
 			Registry registry = LocateRegistry.getRegistry(4303);
 			registry.rebind(Integer.toString(this.componentId), this);
-			System.out.println("bind successful");
+			//System.out.println("bind successful");
 			System.setProperty("java.security.policy", Process.class
 			.getResource("my.policy").toString());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("Bind fail");
+			//System.out.println("Bind fail");
 		}
 		
 	}
@@ -96,7 +96,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		{
 			if(receiverIndex==2)
 			{
-				System.out.println("report sent");
+				//System.out.println("report sent");
 			}
 		}
 		try
@@ -106,13 +106,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 			Message mObj;
 			
 			// notify the clock
-				//System.out.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
+				////System.out.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
 				//Main.writer.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
 					mObj = m;
 				//logging
 							
 			
-			//System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
+			////System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
@@ -138,14 +138,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void report()
 	{
 		synchronized(this){
-			System.out.println("find count"+find_count);
+			//System.out.println("find count"+find_count);
 			if(find_count==0&&this.test_edge==Accept.Initial)
 			{
 				SN=State.Found;
-				if(this.componentId==2)
-				System.out.println("component"+this.componentId+"sent report msg with weight"+this.best_weight+"to"+this.in_branch);
+				
 				this.send(new Report(this.componentId,this.best_weight),this.in_branch);
-				System.out.println(this.componentId+"report"+this.c+++"in MST:"+inMST+"not in MST:"+not_inMST);
+				
 				
 			}
 		}
@@ -153,7 +152,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processReport(Report msg)
 	{
 		
-		System.out.println(this.componentId+"process msg report"+msg.getSerialversionuid());
+		//System.out.println(this.componentId+"process msg report");
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
@@ -178,6 +177,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 						{
 							System.out.println(this.componentId+"Halt");
 							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
+							System.out.println(this.FN+" level"+this.LN);
 						}
 					}
 				}
@@ -188,7 +188,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	{
 		synchronized(this){
 			int j=adjacentMinimalEdge();
-			System.out.println(this.componentId+" unknown list"+unknown_inMST);
+			//System.out.println(this.componentId+" unknown list"+unknown_inMST);
 			this.delUnknownInMst(j);
 			//this.unknown_inMST.remove(j);
 			this.delNotInMst(j);
@@ -210,7 +210,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			else
 			{
 				this.send(new Connect(this.componentId,LN), this.best_edge);
-				System.out.println(this.componentId+" unknown list "+unknown_inMST);
+				//System.out.println(this.componentId+" unknown list "+unknown_inMST);
 				this.delUnknownInMst(best_edge);
 				//this.unknown_inMST.remove(this.best_edge);
 				this.delNotInMst(best_edge);
@@ -220,7 +220,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processInitial(Initiate msg)
-	{System.out.println(this.componentId+"process msg initiate"+msg.getSerialversionuid());
+	{//System.out.println(this.componentId+"process msg initiate"+msg.getSerialversionuid());
 		synchronized(this){
 			LN=msg.getL();
 			FN=msg.getF();
@@ -247,7 +247,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	public void test()
 	{
-		System.out.println(this.componentId+" "+this.unknown_inMST);
+		//System.out.println(this.componentId+" "+this.unknown_inMST);
 		synchronized(this){	
 			if(this.unknown_inMST.size()!=0)
 			{
@@ -261,7 +261,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	
 	public void processConnect(Connect msg)
-	{System.out.println(this.componentId+"process msg connect "+msg.getSerialversionuid());
+	{//System.out.println(this.componentId+"process msg connect "+msg.getSerialversionuid());
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -269,7 +269,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			}
 			if(msg.getL()<LN)
 			{
-				System.out.println(this.componentId+"unknown list"+unknown_inMST);
+				//System.out.println(this.componentId+"unknown list"+unknown_inMST);
 				//this.unknown_inMST.remove(msg.getSenderId());
 				this.delUnknownInMst(msg.getSenderId());
 				//this.not_inMST.remove(msg.getSenderId());
@@ -293,7 +293,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processTest(Test msg)
-	{System.out.println(this.componentId+"process msg test"+msg.getSerialversionuid());
+	{////System.out.println(this.componentId+"process msg test from"+msg.getSenderId());
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -313,7 +313,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 					
 					if(this.unknown_inMST.contains(msg.getSenderId()))
 					{
-						System.out.println(this.componentId+" unknown list"+unknown_inMST);
+						//System.out.println(this.componentId+" unknown list"+unknown_inMST);
 						//this.unknown_inMST.remove(msg.getSenderId());
 						this.delUnknownInMst(msg.getSenderId());
 						//this.inMST.remove(msg.getSenderId());
@@ -322,7 +322,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 					}
 					if(test_edge!=msg.getSenderId())
 					{
-						send(new Reject(msg.getSenderId()),msg.getSenderId());
+						send(new Reject(this.componentId),msg.getSenderId());
 					}else{
 						test();
 					}
@@ -331,7 +331,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processAccept(Accept msg)
-	{System.out.println(this.componentId+"process msg accept"+msg.getSerialversionuid());
+	{//System.out.println(this.componentId+"process msg accept"+msg.getSerialversionuid());
 		synchronized(this){
 			test_edge=Accept.Initial;
 			if(adjacent[msg.getSenderId()]<best_weight)
@@ -343,11 +343,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processReject(Reject msg)
-	{System.out.println(this.componentId+"process msg reject "+msg.getSerialversionuid());
+	{////System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
 		synchronized(this){
 			if(this.unknown_inMST.contains(msg.getSenderId()))
-			{	System.out.println("still unknown");
-				System.out.println(this.componentId+" unknown list "+unknown_inMST);
+			{	//System.out.println("still unknown");
+				//System.out.println(this.componentId+" unknown list "+unknown_inMST);
 				//this.unknown_inMST.remove(msg.getSenderId());
 				this.delUnknownInMst(msg.getSenderId());
 				//this.inMST.remove(msg.getSenderId());
@@ -367,7 +367,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			if(this.componentId==2&&queue.size()==0&&flag)
 			{
-				System.out.println("2true");
+				//System.out.println("2true");
 				flag=false;
 			}
 			processDelayedMessage();		
@@ -382,11 +382,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 				Message m=queue.poll();
 				if(m!=null)
 				{	try {
-						System.out.println(this.componentId+" processDelayed");
+						//System.out.println(this.componentId+" processDelayed");
 						this.receive(m);
 					} catch (RemoteException e) {
 						// TODO Auto-generated catch block
-						System.out.println("re handling exception!");
+						//System.out.println("re handling exception!");
 					}
 				}
 			}
