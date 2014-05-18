@@ -9,6 +9,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private int find_count;
 	private float[] adjacent;
 	private int c=0;
+	private boolean printed=false;
 	Queue<Message> queue = new LinkedList<Message>(); 
 	/*
 	 * LN=0;
@@ -152,7 +154,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processReport(Report msg)
 	{
 		
-		//System.out.println(this.componentId+"process msg report");
+	//	System.out.println(this.componentId+"process msg report");
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
@@ -178,6 +180,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 							System.out.println(this.componentId+"Halt");
 							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
 							System.out.println(this.FN+" level"+this.LN);
+							checkTerminate();
 						}
 					}
 				}
@@ -344,6 +347,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void processReject(Reject msg)
 	{////System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
+		
 		synchronized(this){
 			if(this.unknown_inMST.contains(msg.getSenderId()))
 			{	//System.out.println("still unknown");
@@ -363,6 +367,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		{
 			wakeup();
 		}
+		ArrayList<Integer> compare=new ArrayList<Integer>();
 		while(true){
 			
 			if(this.componentId==2&&queue.size()==0&&flag)
@@ -370,7 +375,58 @@ public class Component extends UnicastRemoteObject implements RMI,
 				//System.out.println("2true");
 				flag=false;
 			}
+			synchronized(this){
+				/*if(!equalLists(compare,unknown_inMST))
+				{
+					
+					System.out.println("for"+componentId+"in MST "+inMST);
+					System.out.println("for"+componentId+"not in MST "+not_inMST);
+					compare=unknown_inMST;
+				}*/
+			}
 			processDelayedMessage();		
+		}
+	}
+	public  boolean equalLists(List<Integer> one, List<Integer> two){     
+	    if (one == null && two == null){
+	        return true;
+	    }
+
+	    if((one == null && two != null) 
+	      || one != null && two == null
+	      || one.size() != two.size()){
+	        return false;
+	    }
+
+	    //to avoid messing the order of the lists we will use a copy
+	    //as noted in comments by A. R. S.
+	    one = new ArrayList<Integer>(one); 
+	    two = new ArrayList<Integer>(two);   
+
+	    Collections.sort(one);
+	    Collections.sort(two);      
+	    return one.equals(two);
+	}
+	public void checkTerminate()
+	{
+		if(printed){return;}
+		synchronized(this){
+			
+			if(unknown_inMST.size()==0&&!printed)
+			{
+				System.out.println("for "+componentId);
+				System.out.println(inMST+" are in MST");
+				System.out.println(not_inMST+" are not in MST");
+				printed=true;
+				for(int i=0;i<adjacent.length;i++)
+				{
+					if(adjacent[i]!=Float.MAX_VALUE)
+					{
+						send(new CheckTerminate(this.componentId),i);
+					}
+				}
+			}
+			
 		}
 	}
 	public void processDelayedMessage()
@@ -429,6 +485,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 		{
 			this.processTest((Test)message);
 	//		processRequest((Request)message);
+		}
+		if(message instanceof CheckTerminate)
+		{
+			checkTerminate();
 		}
 
 	}
