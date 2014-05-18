@@ -154,7 +154,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processReport(Report msg)
 	{
 		
-	//	System.out.println(this.componentId+"process msg report");
+		//System.out.println(this.componentId+"process msg report from"+msg.getSenderId());
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
@@ -181,6 +181,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
 							System.out.println(this.FN+" level"+this.LN);
 							checkTerminate();
+							SN=State.Found;
 						}
 					}
 				}
@@ -417,6 +418,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				System.out.println("for "+componentId);
 				System.out.println(inMST+" are in MST");
 				System.out.println(not_inMST+" are not in MST");
+				SN=State.Found;
 				printed=true;
 				for(int i=0;i<adjacent.length;i++)
 				{
