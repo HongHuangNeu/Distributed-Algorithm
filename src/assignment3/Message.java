@@ -9,6 +9,9 @@ public class Message implements Serializable {
 	private static final long serialVersionUID = -5836283489677344417L;
 
 	private int senderId;
+	public int seq_id;
+	public boolean firstTime=true;
+	public boolean inQueue=false;
 	public Message(int senderId)
 	{
 		this.senderId=senderId;
