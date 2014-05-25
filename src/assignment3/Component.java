@@ -52,7 +52,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private int componentId;
 	private int totalNumber;
 	private int maxDelay=1000;
-	
+	private int[] msgIndex;
+	private int[] expectIndex;
 	
 	public Component(int componentIndex,int totalNumber,float[] adjacent)
 			throws RemoteException{
@@ -60,6 +61,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 		this.componentId=componentIndex;
 		this.totalNumber=totalNumber;
 		this.adjacent=new float[totalNumber];
+		msgIndex=new int[totalNumber];
+		expectIndex=new int[totalNumber];
+		for(int i=0;i<msgIndex.length;i++)
+		{
+			msgIndex[i]=0;
+			expectIndex[i]=0;
+		}
 		for(int i=0;i<adjacent.length;i++)
 		{
 			this.adjacent[i]=adjacent[i];
@@ -76,10 +84,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 		try {
 			Registry registry = LocateRegistry.getRegistry(4303);
 			registry.rebind(Integer.toString(this.componentId), this);
-			//System.out.println("bind successful");
-			System.setProperty("java.security.policy", Process.class
-			.getResource("my.policy").toString());
-		}
+			System.out.println("bind successful");
+		//	System.setProperty("java.security.policy", Process.class.getResource("my.policy").toString());
+			}
 		catch (Exception e) {
 			e.printStackTrace();
 			//System.out.println("Bind fail");
@@ -94,13 +101,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void send(Message m, int receiverIndex)
 	{
 		
-		if(m instanceof Report)
-		{
-			if(receiverIndex==2)
-			{
-				//System.out.println("report sent");
-			}
-		}
+		m.seq_id=msgIndex[receiverIndex];
+		msgIndex[receiverIndex]++;
 		try
 		{
 			
@@ -139,6 +141,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void report()
 	{
+		if(componentId==1)
+		System.out.println(componentId+"try to report");
 		synchronized(this){
 			//System.out.println("find count"+find_count);
 			if(find_count==0&&this.test_edge==Accept.Initial)
@@ -147,14 +151,16 @@ public class Component extends UnicastRemoteObject implements RMI,
 				
 				this.send(new Report(this.componentId,this.best_weight),this.in_branch);
 				
-				
+				System.out.println(componentId+"report to"+in_branch);
+			}else{
+				System.out.println(componentId+"cannot report, find_count"+find_count+"test edge"+test_edge);
 			}
 		}
 	}
 	public void processReport(Report msg)
 	{
-		
-		//System.out.println(this.componentId+"process msg report from"+msg.getSenderId());
+		if(componentId==1)
+		System.out.println(this.componentId+"process msg report from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
@@ -170,6 +176,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				if(SN.equals(State.Find))
 				{
 					queue.offer(msg);
+					
 				}else{
 					if(msg.getBest_weight()>best_weight)
 					{
@@ -197,7 +204,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 			//this.unknown_inMST.remove(j);
 			this.delNotInMst(j);
 			//this.not_inMST.remove(j);
-			inMST.add(j);//single
+			//inMST.add(j);//single
+			addInMst(j);
 			LN=0;
 			SN=State.Found;
 			find_count=0;
@@ -219,12 +227,15 @@ public class Component extends UnicastRemoteObject implements RMI,
 				//this.unknown_inMST.remove(this.best_edge);
 				this.delNotInMst(best_edge);
 				//this.not_inMST.remove(this.best_edge);
-				inMST.add(this.best_edge);//single
+				//inMST.add(this.best_edge);//single
+				addInMst(best_edge);
 			}
 		}
 	}
 	public void processInitial(Initiate msg)
-	{//System.out.println(this.componentId+"process msg initiate"+msg.getSerialversionuid());
+	{
+		if(componentId==1)
+		System.out.println(this.componentId+"process msg initiate from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			LN=msg.getL();
 			FN=msg.getF();
@@ -251,7 +262,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	public void test()
 	{
-		//System.out.println(this.componentId+" "+this.unknown_inMST);
+		
+		System.out.println(this.componentId+" try to test, unknown"+this.unknown_inMST);
 		synchronized(this){	
 			if(this.unknown_inMST.size()!=0)
 			{
@@ -265,7 +277,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	
 	public void processConnect(Connect msg)
-	{//System.out.println(this.componentId+"process msg connect "+msg.getSerialversionuid());
+	{
+		if(componentId==1)
+		System.out.println(this.componentId+"process msg connect "+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -278,7 +292,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 				this.delUnknownInMst(msg.getSenderId());
 				//this.not_inMST.remove(msg.getSenderId());
 				this.delNotInMst(msg.getSenderId());
-				inMST.add(msg.getSenderId());//single
+				//inMST.add(msg.getSenderId());//single
+				addInMst(msg.getSenderId());
 				send(new Initiate(this.componentId,LN,FN,SN),msg.getSenderId());
 				if(SN.equals(State.Find))
 				{
@@ -289,6 +304,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				if(this.unknown_inMST.contains(msg.getSenderId()))
 				{
 					this.queue.offer(msg);
+					System.out.println(componentId+"cannot connect"+unknown_inMST);
 				}
 				else{
 					send(new Initiate(this.componentId,LN+1,adjacent[msg.getSenderId()],State.Find),msg.getSenderId());
@@ -297,7 +313,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processTest(Test msg)
-	{////System.out.println(this.componentId+"process msg test from"+msg.getSenderId());
+	{
+		
+		System.out.println(this.componentId+"process msg test from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -322,7 +340,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 						this.delUnknownInMst(msg.getSenderId());
 						//this.inMST.remove(msg.getSenderId());
 						this.delInMst(msg.getSenderId());
-						this.not_inMST.add(msg.getSenderId());//single
+						//this.not_inMST.add(msg.getSenderId());//single
+						addNotInMst(msg.getSenderId());
 					}
 					if(test_edge!=msg.getSenderId())
 					{
@@ -335,7 +354,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processAccept(Accept msg)
-	{//System.out.println(this.componentId+"process msg accept"+msg.getSerialversionuid());
+	{	
+		
+		System.out.println(this.componentId+"process msg accept from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			test_edge=Accept.Initial;
 			if(adjacent[msg.getSenderId()]<best_weight)
@@ -357,7 +378,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 				this.delUnknownInMst(msg.getSenderId());
 				//this.inMST.remove(msg.getSenderId());
 				this.delInMst(msg.getSenderId());
-				this.not_inMST.add(msg.getSenderId());//single
+				//this.not_inMST.add(msg.getSenderId());//single
+				addNotInMst(msg.getSenderId());
 			}
 			test();
 		}
@@ -368,24 +390,28 @@ public class Component extends UnicastRemoteObject implements RMI,
 		{
 			wakeup();
 		}
-		ArrayList<Integer> compare=new ArrayList<Integer>();
+		
 		while(true){
-			
-			if(this.componentId==2&&queue.size()==0&&flag)
+			synchronized(this)
+			{	
+			if(queue.size()!=0)
 			{
-				//System.out.println("2true");
-				flag=false;
+				
+					Message m=queue.poll();
+					if(m!=null)
+					{	try {
+							//System.out.println(this.componentId+" processDelayed");
+							this.receive(m);
+						} catch (RemoteException e) {
+							// TODO Auto-generated catch block
+							//System.out.println("re handling exception!");
+						}
+					}
+				
 			}
-			synchronized(this){
-				/*if(!equalLists(compare,unknown_inMST))
-				{
-					
-					System.out.println("for"+componentId+"in MST "+inMST);
-					System.out.println("for"+componentId+"not in MST "+not_inMST);
-					compare=unknown_inMST;
-				}*/
 			}
-			processDelayedMessage();		
+		
+			//processDelayedMessage();		
 		}
 	}
 	public  boolean equalLists(List<Integer> one, List<Integer> two){     
@@ -512,6 +538,20 @@ public class Component extends UnicastRemoteObject implements RMI,
 				}
 			}
 			return index;
+		}
+	}
+	public void addInMst(int item)
+	{
+		if(!inMST.contains(item))
+		{
+			inMST.add(item);
+		}
+	}
+	public void addNotInMst(int item)
+	{
+		if(!not_inMST.contains(item))
+		{
+			not_inMST.add(item);
 		}
 	}
 	public void delInMst(int item)
