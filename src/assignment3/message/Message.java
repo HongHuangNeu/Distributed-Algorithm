@@ -1,4 +1,4 @@
-package assignment3;
+package assignment3.message;
 
 import java.io.Serializable;
 import java.util.*;

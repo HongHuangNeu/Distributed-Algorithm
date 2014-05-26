@@ -1,4 +1,4 @@
-package assignment3;
+package assignment3.message;
 
 public class Connect extends Message{
 	private int L;

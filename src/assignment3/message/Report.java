@@ -1,4 +1,4 @@
-package assignment3;
+package assignment3.message;
 
 public class Report extends Message{
 	private float best_weight;

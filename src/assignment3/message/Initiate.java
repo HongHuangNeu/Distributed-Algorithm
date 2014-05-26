@@ -1,4 +1,6 @@
-package assignment3;
+package assignment3.message;
+
+import assignment3.State;
 
 public class Initiate extends Message{
 private int L;
