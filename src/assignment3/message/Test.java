@@ -1,11 +1,20 @@
 package assignment3.message;
 
+import java.util.Map;
+
+import assignment1.clock.VectorTimeStamp;
+
 public class Test extends Message{
 private int L;
 private float F;
-	public Test(int senderId, int L, float F)
+	public Test(
+			int senderId,VectorTimeStamp at,
+			int receiverId,
+			Map<Integer,VectorTimeStamp> buffer,
+			int L,
+			float F)
 	{
-		super(senderId);
+		super(senderId, at, receiverId, buffer);
 		this.L=L;
 		this.F=F;
 	}

@@ -1,34 +1,43 @@
 package assignment3.message;
 
+import java.util.Map;
+
+import assignment1.clock.VectorTimeStamp;
 import assignment3.State;
 
 public class Initiate extends Message{
-private int L;
-private float F;
-private State S;
-	public Initiate(int senderId,int L,float F,State S)
-	{
-		super(senderId);
-		this.L=L;
-		this.F=F;
-		this.S=S;
+private int l;
+private float f;
+private State s;
+	public Initiate(
+			int senderId,VectorTimeStamp at,
+			int receiverId,
+			Map<Integer,VectorTimeStamp> buffer,
+			int l,
+			float f,
+			State s) {
+		
+		super(senderId, at, receiverId, buffer);
+		this.l=l;
+		this.f=f;
+		this.s=s;
 	}
 	public int getL() {
-		return L;
+		return l;
 	}
 	public void setL(int l) {
-		L = l;
+		this.l = l;
 	}
 	public float getF() {
-		return F;
+		return this.f;
 	}
 	public void setF(float f) {
-		F = f;
+		this.f = f;
 	}
 	public State getS() {
-		return S;
+		return this.s;
 	}
 	public void setS(State s) {
-		S = s;
+		this.s = s;
 	}
 }

@@ -1,16 +1,23 @@
 package assignment3.message;
 
+import java.util.Map;
+
+import assignment1.clock.VectorTimeStamp;
+
 public class Connect extends Message{
-	private int L;
-	public Connect(int senderId,int L)
+	private int l;
+	public Connect(
+			int senderId,VectorTimeStamp at,
+			int receiverId,
+			Map<Integer,VectorTimeStamp> buffer, int l)
 	{
-		super(senderId);
-		this.L=L;
+		super(senderId, at, receiverId, buffer);
+		this.l=l;
 	}
 	public int getL() {
-		return L;
+		return l;
 	}
 	public void setL(int l) {
-		L = l;
+		this.l = l;
 	}
 }

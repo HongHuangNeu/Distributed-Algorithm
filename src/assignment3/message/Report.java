@@ -1,10 +1,19 @@
 package assignment3.message;
 
+import java.util.Map;
+
+import assignment1.clock.VectorTimeStamp;
+
 public class Report extends Message{
 	private float best_weight;
-	public Report(int senderId,float best_weight)
+	public Report(
+			int senderId,VectorTimeStamp at,
+			int receiverId,
+			Map<Integer,VectorTimeStamp> buffer,
+			float best_weight)
 	{
-		super(senderId);
+		super(senderId, at, receiverId, buffer);
+		
 		this.best_weight=best_weight;
 	}
 	public float getBest_weight() {
