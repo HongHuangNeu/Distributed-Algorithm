@@ -23,7 +23,7 @@ import assignment1.clock.VectorClock;
 import assignment1.clock.VectorTimeStamp;
 
 //@SuppressWarnings("serial")
-public class Process<T> extends UnicastRemoteObject implements RMI<T>,
+public class Process extends UnicastRemoteObject implements RMI,
 		Runnable, Serializable {
 	private static final long serialVersionUID = 7247714666080613254L;
 	
