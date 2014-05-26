@@ -1,4 +1,4 @@
-package assignment1.clock;
+package assignment3.clock;
 
 import java.io.Serializable;
 import java.util.ArrayList;

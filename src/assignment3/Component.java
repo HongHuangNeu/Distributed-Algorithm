@@ -18,10 +18,21 @@ import java.util.Map;
 import java.util.Queue;
 
 
+
+
 import assignment3.DelayedMessageSender;
+import assignment3.clock.VectorClock;
+import assignment3.clock.VectorTimeStamp;
+import assignment3.message.Accept;
+import assignment3.message.ChangeRoot;
+import assignment3.message.CheckTerminate;
+import assignment3.message.Connect;
+import assignment3.message.Initiate;
+import assignment3.message.Message;
+import assignment3.message.Reject;
+import assignment3.message.Report;
+import assignment3.message.Test;
 import assignment1.Process;
-import assignment1.clock.VectorClock;
-import assignment1.clock.VectorTimeStamp;
 
 //@SuppressWarnings("serial")
 public class Component extends UnicastRemoteObject implements RMI,
@@ -330,7 +341,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 					send(new Accept(this.componentId),msg.getSenderId());
 				}else{
 					/*if (SE(j) = ?_in_MST) then SE(j) := not_in_MST 
-	               if (test-edge ¡Ù j) then send(reject) on edge j  
+	               if (test-edge ?? j) then send(reject) on edge j  
 	               else test()*/
 					
 					if(this.unknown_inMST.contains(msg.getSenderId()))

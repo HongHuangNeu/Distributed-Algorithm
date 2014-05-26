@@ -1,26 +1,18 @@
-package assignment1;
+package assignment3;
 
 import java.io.Serializable;
 import java.rmi.AlreadyBoundException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.ExportException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-
-
-
-import assignment1.clock.VectorClock;
-import assignment1.clock.VectorTimeStamp;
+import assignment3.clock.VectorClock;
+import assignment3.clock.VectorTimeStamp;
+import assignment3.message.Message;
 
 //@SuppressWarnings("serial")
 public class Process extends UnicastRemoteObject implements RMI,
@@ -42,7 +34,7 @@ public class Process extends UnicastRemoteObject implements RMI,
 		super();
 		this.processIndex = processIndex;
 		this.processClock=clock;
-		timeStampBuffer=new HashMap();
+		timeStampBuffer=new HashMap<>();
 		try {
 			
 			Registry registry = LocateRegistry.getRegistry(4303);
@@ -62,56 +54,36 @@ public class Process extends UnicastRemoteObject implements RMI,
 
 	}
 
-	public void send(String m, int receiverIndex)
+	public void send(Message m)
 	{
 		try
 		{
 			// wrap message contents m into message object
-			Message mObj;
 			synchronized(this)
 			{
 			// notify the clock
 			this.processClock.updateSent();
-		
 			
-			//System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " number before send"+(Main.id+1)+this.processClock.getCurrentTime());
-			//Main.writer.println("number before send"+(Main.id+1)+this.processClock.getCurrentTime());
-			
-			mObj = new Message(this.processIndex, m, Main.id++,this.processClock.getCurrentTime(),receiverIndex,copyBuffer(this.timeStampBuffer));
-			//logging
-		
-			updateBufferAfterSend(receiverIndex);
+			updateBufferAfterSend(m.getReceiverId());
 			}
-			//System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
 					4303);
-			RMI reciever = (RMI) registry.lookup(Integer.toString(receiverIndex));
+			RMI reciever = (RMI) registry.lookup(Integer.toString(m.getReceiverId()));
 			
 			// send the message
 			this.messagesSent++;
-			DelayedMessageSender sender = new DelayedMessageSender(this.processIndex, this.processClock.getCurrentTime(), reciever, mObj, 1000);
+			DelayedMessageSender sender = new DelayedMessageSender(this.processIndex, this.processClock.getCurrentTime(), reciever, m, 1000);
 			new Thread(sender).start();
 			
 		}
 		catch (Exception e)
 		{
-			//System.out.println("[" + this.processIndex + "]" + this.getProcessClock().getCurrentTime() + " recipient not found.");
 			e.printStackTrace();
 		}
 	}
 	
 	public void run() {
-		
-		while(this.messagesSent < 10)
-		{
-			for(int j = 0; j < this.processes; j++)
-			{
-				if (processIndex != j) {
-					send("m", j);
-				}
-			}
-		}
 		while(true);
 	}
 	
@@ -119,7 +91,7 @@ public class Process extends UnicastRemoteObject implements RMI,
 		// notify the clock
 		
 		System.out.println("[" + this.processIndex + "]" + this.processClock.getCurrentTime() + " receive from process "
-				+ message.getSenderIndex() + " message: " + message);
+				+ message.getSenderId() + " message: " + message);
 		
 		synchronized(this){
 			if(this.canDeliver(message))
@@ -222,7 +194,7 @@ public class Process extends UnicastRemoteObject implements RMI,
 	
 	Map<Integer,VectorTimeStamp> copyBuffer(Map<Integer,VectorTimeStamp> localBuffer)
 	{
-		Map<Integer,VectorTimeStamp> result=new HashMap(); 
+		Map<Integer,VectorTimeStamp> result=new HashMap<>(); 
 		for(Integer key:localBuffer.keySet())
 		{
 			result.put(key, new VectorTimeStamp(localBuffer.get(key).getTime()));

@@ -7,7 +7,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import assignment1.clock.VectorClock;
+import assignment3.clock.VectorClock;
 
 public class Main {
 public static Integer id=0;

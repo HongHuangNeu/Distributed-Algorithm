@@ -2,8 +2,8 @@ package assignment3.message;
 
 import java.util.Map;
 
-import assignment1.clock.VectorTimeStamp;
 import assignment3.State;
+import assignment3.clock.VectorTimeStamp;
 
 public class Initiate extends Message{
 private int l;

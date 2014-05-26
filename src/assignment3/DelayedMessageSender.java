@@ -2,18 +2,24 @@ package assignment3;
 
 import java.rmi.RemoteException;
 
-public class DelayedMessageSender<T> implements Runnable
-{
+import assignment3.message.Message;
+import assignment3.RMI;
+import assignment3.clock.VectorTimeStamp;
 
+public class DelayedMessageSender implements Runnable
+{
+	private int fromId;
 	private RMI to;
 	private Message m;
+	private VectorTimeStamp t;
 	
 	private long maxDelay = 0;
 	
-	public DelayedMessageSender( RMI to, Message m, long maxDelay)
+	public DelayedMessageSender(int fromId, VectorTimeStamp t, RMI to, Message m, long maxDelay)
 	{
-	
+		this.fromId = fromId;
 		this.to = to;
+		this.t = t;
 		this.m = m;
 		this.maxDelay = maxDelay;
 	}
@@ -28,6 +34,7 @@ public class DelayedMessageSender<T> implements Runnable
 			
 			synchronized(this.to)
 			{
+				System.out.println("[" + this.fromId + "]" + this.t + " number before send"+(Main.id+1));
 				to.receive(this.m);
 			}
 		}
