@@ -1,25 +1,21 @@
 package assignment3.message;
 
-import java.util.Map;
+public class Report implements Payload {
+    private int senderId;
+	private float bestWeight;
 
-import assignment3.clock.VectorTimeStamp;
+	public Report(int senderId, float bestWeight) {
+        this.senderId = senderId;
+        this.bestWeight = bestWeight;
+    }
 
-public class Report extends Message{
-	private float best_weight;
-	public Report(
-			int senderId,VectorTimeStamp at,
-			int receiverId,
-			Map<Integer,VectorTimeStamp> buffer,
-			float best_weight)
-	{
-		super(senderId, at, receiverId, buffer);
-		
-		this.best_weight=best_weight;
+    public int getSenderId() {
+        return this.senderId;
+    }
+	public float getBestWeight() {
+		return bestWeight;
 	}
-	public float getBest_weight() {
-		return best_weight;
-	}
-	public void setBest_weight(float best_weight) {
-		this.best_weight = best_weight;
+	public void setBestWeight(float bestWeight) {
+		this.bestWeight = bestWeight;
 	}
 }

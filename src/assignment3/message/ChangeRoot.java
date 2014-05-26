@@ -5,12 +5,13 @@ import java.util.Map;
 import assignment3.clock.VectorTimeStamp;
 import assignment3.message.Message;
 
-public class ChangeRoot extends Message{
-	public ChangeRoot(
-			int senderId,VectorTimeStamp at,
-			int receiverId,
-			Map<Integer,VectorTimeStamp> buffer)
-	{
-		super(senderId, at, receiverId, buffer);
-	}
+public class ChangeRoot implements Payload {
+    private int senderId;
+	public ChangeRoot(int senderId) {
+        this.senderId = senderId;
+    }
+
+    public int getSenderId() {
+        return this.senderId;
+    }
 }

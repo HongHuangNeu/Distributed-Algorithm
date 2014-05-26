@@ -4,20 +4,17 @@ import java.util.Map;
 
 import assignment3.clock.VectorTimeStamp;
 
-public class Test extends Message{
-private int L;
-private float F;
-	public Test(
-			int senderId,VectorTimeStamp at,
-			int receiverId,
-			Map<Integer,VectorTimeStamp> buffer,
-			int L,
-			float F)
-	{
-		super(senderId, at, receiverId, buffer);
-		this.L=L;
-		this.F=F;
-	}
+public class Test implements Payload {
+    private int senderId;
+    private int L;
+    private float F;
+	public Test(int senderId, int l, float f) {
+        this.senderId = senderId;
+    }
+
+    public int getSenderId() {
+        return this.senderId;
+    }
 	public int getL() {
 		return L;
 	}

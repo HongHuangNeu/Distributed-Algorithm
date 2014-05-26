@@ -4,15 +4,17 @@ import java.util.Map;
 
 import assignment3.clock.VectorTimeStamp;
 
-public class Connect extends Message{
+public class Connect implements Payload {
+
+    private int senderId;
 	private int l;
-	public Connect(
-			int senderId,VectorTimeStamp at,
-			int receiverId,
-			Map<Integer,VectorTimeStamp> buffer, int l)
-	{
-		super(senderId, at, receiverId, buffer);
-		this.l=l;
+	public Connect(int senderId, int l) {
+        this.senderId = senderId;
+        this.l = l;
+    }
+
+    public int getSenderId() {
+        return this.senderId;
 	}
 	public int getL() {
 		return l;

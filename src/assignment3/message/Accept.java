@@ -5,13 +5,14 @@ import java.util.Map;
 import assignment3.clock.VectorTimeStamp;
 import assignment3.message.Message;
 
-public class Accept extends Message{
+public class Accept implements Payload{
 	public static int Initial=-1;
-	public Accept(
-		int senderId,VectorTimeStamp at,
-		int receiverId,
-		Map<Integer,VectorTimeStamp> buffer) {
-		
-		super(senderId, at, receiverId, buffer);
+    private int senderId;
+	public Accept(int senderId) {
+        this.senderId = senderId;
 	}
+
+    public int getSenderId() {
+        return this.senderId;
+    }
 }

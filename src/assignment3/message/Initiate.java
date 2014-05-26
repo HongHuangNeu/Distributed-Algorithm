@@ -5,23 +5,23 @@ import java.util.Map;
 import assignment3.State;
 import assignment3.clock.VectorTimeStamp;
 
-public class Initiate extends Message{
-private int l;
-private float f;
-private State s;
-	public Initiate(
-			int senderId,VectorTimeStamp at,
-			int receiverId,
-			Map<Integer,VectorTimeStamp> buffer,
-			int l,
-			float f,
-			State s) {
-		
-		super(senderId, at, receiverId, buffer);
-		this.l=l;
-		this.f=f;
-		this.s=s;
-	}
+public class Initiate implements Payload {
+    private int senderId;
+    private int l;
+    private float f;
+    private State s;
+
+    public Initiate(int senderId, int l, float f, State s) {
+        this.senderId = senderId;
+        this.l = l;
+        this.f = f;
+        this.s = s;
+    }
+
+    public int getSenderId() {
+        return this.senderId;
+    }
+
 	public int getL() {
 		return l;
 	}

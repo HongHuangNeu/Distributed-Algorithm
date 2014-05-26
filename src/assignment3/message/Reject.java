@@ -4,12 +4,15 @@ import java.util.Map;
 
 import assignment3.clock.VectorTimeStamp;
 
-public class Reject extends Message{
-	public Reject(
-		int senderId,VectorTimeStamp at,
-		int receiverId,
-		Map<Integer,VectorTimeStamp> buffer)
-	{
-		super(senderId, at, receiverId, buffer);
-	}
+public class Reject implements Payload {
+
+    private int senderId;
+
+	public Reject(int senderId) {
+        this.senderId = senderId;
+    }
+
+    public int getSenderId() {
+        return this.senderId;
+    }
 }

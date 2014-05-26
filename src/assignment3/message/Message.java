@@ -12,17 +12,20 @@ public class Message implements Serializable {
 	private int receiverId;
 	private VectorTimeStamp sentAt;
 	private Map<Integer,VectorTimeStamp> buffer;
+    private Payload payload;
 	
 	public Message(
 		int senderId,
+        int receiverId,
 		VectorTimeStamp at,
-		int receiverId,
-		Map<Integer,VectorTimeStamp> buffer) {
+		Map<Integer,VectorTimeStamp> buffer,
+        Payload payload) {
 		
 		this.senderId = senderId;
 		this.sentAt = at;
-		this.receiverId=receiverId;
-		this.buffer=buffer;
+		this.receiverId = receiverId;
+		this.buffer = buffer;
+        this.payload = payload;
 	}
 	
 	public int getSenderId()
@@ -49,4 +52,8 @@ public class Message implements Serializable {
 	public void setReceiverId(int receiverId) {
 		this.receiverId = receiverId;
 	}
+
+    public Payload getPayload() {
+        return this.payload;
+    }
 }
