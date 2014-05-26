@@ -18,8 +18,11 @@ public class GraphReader {
 			float[][] graph = new float[n][n];
 			
 			for(int row = 0; row < n; row++) {
-				for(int col = 0; col < n; col++) {
-					graph[row][col] = dist(s.next());
+				graph[row][row] = dist("x");
+                for(int col = 0; col < row; col++) {
+                    float weight = dist(s.next());
+					graph[row][col] = weight;
+                    graph[col][row] = weight;
 				}
 			}
 			
