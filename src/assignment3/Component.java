@@ -118,6 +118,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			// send the message
 			//reciever.receive(mObj);
+		
+			//reciever.receive(mObj);
 			DelayedMessageSender sender = new DelayedMessageSender(reciever, mObj, 0);
 			new Thread(sender).start();
 			
@@ -136,6 +138,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void report()
 	{
+		System.out.println(componentId+"try to report");
 		synchronized(this){
 			//System.out.println("find count"+find_count);
 			if(find_count==0&&this.test_edge==Accept.Initial)
@@ -143,20 +146,27 @@ public class Component extends UnicastRemoteObject implements RMI,
 				SN=State.Found;
 				
 				this.send(new Report(this.componentId,this.best_weight),this.in_branch);
+				System.out.println(componentId+"report to "+this.in_branch);
 				
-				
+			}else
+			{
+				System.out.println("not report, find count"+find_count+"test_edge"+test_edge);
 			}
 		}
 	}
 	public boolean processReport(Report msg)
 	{
-		System.out.println(this.componentId+"process msg report from"+msg.getSenderId()+"number"+msg.seq_id);
+		
 		if(msg.inQueue)
 			System.out.println(this.componentId+"process msg report again from"+msg.getSenderId()+"number "+msg.seq_id);
+		else
+			System.out.println(this.componentId+"process msg report from"+msg.getSenderId()+"number"+msg.seq_id);
 		//System.out.println(this.componentId+"process msg report from"+msg.getSenderId());
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
+				//careful
+				
 				find_count--;
 				if(msg.getBest_weight()<best_weight)
 				{
@@ -166,8 +176,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 				report();
 			}
 			else{
+				System.out.println(componentId+"in branch"+in_branch);
 				if(SN.equals(State.Find))
 				{
+					System.out.println(this.componentId+"says"+msg.getSenderId()+"has to wait,seq:"+msg.seq_id);
 					if(!msg.inQueue)
 					{
 						msg.inQueue=true;
@@ -182,8 +194,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 						if(msg.getBest_weight()==best_weight&&msg.getBest_weight()==Float.MAX_VALUE)
 						{
 							System.out.println(this.componentId+"Halt");
-							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
-							System.out.println(this.FN+" level"+this.LN);
+							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST+"find count "+this.find_count+"this state "+this.SN);
+				 			System.out.println(this.FN+" level"+this.LN);
 							checkTerminate();
 							SN=State.Found;
 						}
@@ -197,12 +209,14 @@ public class Component extends UnicastRemoteObject implements RMI,
 	{
 		synchronized(this){
 			int j=adjacentMinimalEdge();
+			System.out.println(componentId+"choose"+j+"to be the minimum weight");
 			//System.out.println(this.componentId+" unknown list"+unknown_inMST);
 			this.delUnknownInMst(j);
 			//this.unknown_inMST.remove(j);
 			this.delNotInMst(j);
 			//this.not_inMST.remove(j);
-			inMST.add(j);//single
+			//inMST.add(j);//single
+			addInMST(j);
 			LN=0;
 			SN=State.Found;
 			find_count=0;
@@ -224,19 +238,23 @@ public class Component extends UnicastRemoteObject implements RMI,
 				//this.unknown_inMST.remove(this.best_edge);
 				this.delNotInMst(best_edge);
 				//this.not_inMST.remove(this.best_edge);
-				inMST.add(this.best_edge);//single
+				//inMST.add(this.best_edge);//single
+				addInMST(best_edge);
 			}
 		}
 	}
 	public boolean processInitial(Initiate msg)
 	{//System.out.println(this.componentId+"process msg initiate"+msg.getSerialversionuid());
-		System.out.println(this.componentId+"process msg initial from"+msg.getSenderId());
+		
 		if(msg.inQueue)
-			System.out.println(this.componentId+"process msg initial again from"+msg.getSenderId());
+			System.out.println(this.componentId+"process msg initial again from"+msg.getSenderId()+"seq:"+msg.seq_id+"level"+msg.getL());
+		else
+			System.out.println(this.componentId+"process msg initial from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			LN=msg.getL();
 			FN=msg.getF();
-			SN=msg.getS();
+			SN=msg.getS();			
+			System.out.println(this.componentId+"level becomes"+LN);
 			in_branch=msg.getSenderId();
 			best_edge=Accept.Initial;
 			best_weight=Float.MAX_VALUE;
@@ -244,6 +262,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			{
 				if(adjacent[i]!=Float.MAX_VALUE&&i!=msg.getSenderId()&&inMST.contains(i))
 				{
+					
 					send(new Initiate(this.componentId,msg.getL(),FN=msg.getF(),SN=msg.getS()),i);
 					if(msg.getS().equals(State.Find))
 					{
@@ -251,7 +270,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 					}
 				}
 			}
-			if(msg.getS().equals(State.Find))
+			if(msg.getS().equals(State.Find))	
 			test();
 			
 		}
@@ -275,10 +294,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	public boolean processConnect(Connect msg)
 	{
-		System.out.println(this.componentId+"process msg connect from"+msg.getSenderId());
-		if(msg.inQueue)
-		System.out.println(this.componentId+"process msg connect again from"+msg.getSenderId());
 		
+		if(msg.inQueue)
+		System.out.println(this.componentId+"process msg connect again from"+msg.getSenderId()+"seq"+msg.seq_id);
+		else
+			System.out.println(this.componentId+"process msg connect from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -291,7 +311,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 				this.delUnknownInMst(msg.getSenderId());
 				//this.not_inMST.remove(msg.getSenderId());
 				this.delNotInMst(msg.getSenderId());
-				inMST.add(msg.getSenderId());//single
+				//inMST.add(msg.getSenderId());//single
+				addInMST(msg.getSenderId());
 				send(new Initiate(this.componentId,LN,FN,SN),msg.getSenderId());
 				if(SN.equals(State.Find))
 				{
@@ -306,6 +327,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 						msg.inQueue=true;
 						this.queue.offer(msg);
 					}
+					System.out.println(this.componentId+"my level"+this.LN+msg.getSenderId()+"level"+msg.getL()+"my in MST"+this.inMST+" unknown MST"+this.unknown_inMST+"best edge"+this.best_edge+"find count "+this.find_count+"this state "+this.SN);
 					return false;
 				}
 				else{
@@ -317,9 +339,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public boolean processTest(Test msg)
 	{////System.out.println(this.componentId+"process msg test from"+msg.getSenderId());
-		System.out.println(this.componentId+"process msg test from"+msg.getSenderId());
+		
 		if(msg.inQueue)
-			System.out.println(this.componentId+"process msg test again from"+msg.getSenderId());
+			System.out.println(this.componentId+"process msg test again from"+msg.getSenderId()+"seq"+msg.seq_id+"level"+msg.getL());
+		else
+			System.out.println(this.componentId+"process msg test from"+msg.getSenderId()+"seq"+msg.seq_id+"level"+msg.getL());
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -349,7 +373,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 						this.delUnknownInMst(msg.getSenderId());
 						//this.inMST.remove(msg.getSenderId());
 						this.delInMst(msg.getSenderId());
-						this.not_inMST.add(msg.getSenderId());//single
+						//this.not_inMST.add(msg.getSenderId());//single
+						addNotInMST(msg.getSenderId());
 					}
 					if(test_edge!=msg.getSenderId())
 					{
@@ -364,9 +389,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public boolean processAccept(Accept msg)
 	{//System.out.println(this.componentId+"process msg accept"+msg.getSerialversionuid());
-		System.out.println(this.componentId+"process msg accept from"+msg.getSenderId());
+		
 		if(msg.inQueue)
-			System.out.println(this.componentId+"process msg accept again from"+msg.getSenderId());
+			System.out.println(this.componentId+"process msg accept again from"+msg.getSenderId()+"seq"+msg.seq_id);
+		else
+			System.out.println(this.componentId+"process msg accept from"+msg.getSenderId()+"seq"+msg.seq_id);	
 		synchronized(this){
 			test_edge=Accept.Initial;
 			if(adjacent[msg.getSenderId()]<best_weight)
@@ -380,9 +407,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public boolean processReject(Reject msg)
 	{////System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
-		System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
+		
 		if(msg.inQueue)
 			System.out.println(this.componentId+"process msg reject again from"+msg.getSenderId());
+		else
+			System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
 		synchronized(this){
 			if(this.unknown_inMST.contains(msg.getSenderId()))
 			{	//System.out.println("still unknown");
@@ -391,7 +420,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 				this.delUnknownInMst(msg.getSenderId());
 				//this.inMST.remove(msg.getSenderId());
 				this.delInMst(msg.getSenderId());
-				this.not_inMST.add(msg.getSenderId());//single
+				//this.not_inMST.add(msg.getSenderId());//single
+				addNotInMST(msg.getSenderId());
 			}
 			test();
 			return true;
@@ -399,24 +429,40 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void run() {
 	
+		java.util.Timer timer = new java.util.Timer();
+		timer.schedule(new Cleaner(this), 1000, 1000);
+
+
+		
 		while(SN.equals(State.Sleep))
 		{
 			wakeup();
 		}
 		
 		while(true){
-			for(int i=0;i<1000000000;i++)
-			{}
 			synchronized(this){
-				while(tryAll())
-				{
-					System.out.println(this.componentId+"try");
-				}
+				
 			}
 					
 		}
 	}
 	
+	public int getComponentId() {
+		return componentId;
+	}
+
+
+
+
+
+	public void setComponentId(int componentId) {
+		this.componentId = componentId;
+	}
+
+
+
+
+
 	public boolean checkTerminate()
 	{
 		if(printed){return true;}
@@ -578,8 +624,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 			float min=Float.MAX_VALUE;
 			for(int j=0;j<this.adjacent.length;j++)
 			{
-				if(this.adjacent[j]>0&&this.adjacent[j]<min)
+				if(this.adjacent[j]>0&&this.adjacent[j]<min&&unknown_inMST.contains(j)&&j!=componentId)
 				{
+					//careful
 					index=j;
 					min=this.adjacent[j];
 				}
@@ -597,6 +644,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 				return;
 			}
 		}
+	}
+	public void showInfo()
+	{
+		System.out.println(this.componentId+"level"+LN+"inMST"+inMST+"not in MST"+not_inMST+"unknown"+unknown_inMST+"state"+SN+"find count"+find_count+"best edge"+best_edge+"in branch"+in_branch);
 	}
 	public void delNotInMst(int item)
 	{
@@ -620,10 +671,25 @@ public class Component extends UnicastRemoteObject implements RMI,
 			}
 		}
 	}
+	public void addNotInMST(int item)
+	{
+		if(!not_inMST.contains(item))
+		{
+			not_inMST.add(item);
+		}
+	}
+	public void addInMST(int item)
+	{
+		if(!inMST.contains(item))
+		{
+			inMST.add(item);
+		}
+	}
 	public int unknowMinimumEdge()
 	{
 		synchronized(this){
 			int index=this.unknown_inMST.get(0);
+			//index: adjacent node number of minimum weight; 
 			float min=Float.MAX_VALUE;
 			for(int i:this.unknown_inMST)
 			{
