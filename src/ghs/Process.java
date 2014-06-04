@@ -1,4 +1,4 @@
-package assignment3;
+package ghs;
 
 import java.io.Serializable;
 import java.rmi.AlreadyBoundException;
@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import assignment3.clock.VectorClock;
-import assignment3.clock.VectorTimeStamp;
-import assignment3.message.Message;
-import assignment3.message.Payload;
+import ghs.clock.VectorClock;
+import ghs.clock.VectorTimeStamp;
+import ghs.message.Message;
+import ghs.message.Payload;
 
 //@SuppressWarnings("serial")
 public class Process extends UnicastRemoteObject implements RMI,

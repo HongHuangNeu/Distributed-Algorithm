@@ -1,4 +1,4 @@
-package assignment3.message;
+package ghs.message;
 
 /**
  * Created by ferdy on 5/26/14.

@@ -1,9 +1,6 @@
-package assignment3.clock;
+package ghs.clock;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class VectorClock 
+public class VectorClock
 {
 	private VectorTimeStamp currentTime;
 	private int processId;

@@ -1,9 +1,9 @@
-package assignment3.message;
+package ghs.message;
 
 import java.io.Serializable;
 import java.util.*;
 
-import assignment3.clock.VectorTimeStamp;
+import ghs.clock.VectorTimeStamp;
 
 public class Message implements Serializable {
 	private static final long serialVersionUID = -5836283489677344417L;

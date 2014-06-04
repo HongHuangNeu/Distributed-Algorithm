@@ -1,4 +1,4 @@
-package assignment3;
+package ghs.util;
 
 import java.io.File;
 import java.util.Scanner;
