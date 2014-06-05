@@ -29,7 +29,6 @@ public class DelayedMessageSender implements Runnable {
             Thread.sleep(delay);
 
             synchronized (this.to) {
-                System.out.println("[" + this.fromId + "]" + this.t + " number before send" + (Main.id + 1));
                 to.receive(this.m);
             }
         } catch (InterruptedException e) {

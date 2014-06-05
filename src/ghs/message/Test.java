@@ -4,10 +4,10 @@ package ghs.message;
  * Created by ferdy on 6/4/14.
  */
 public class Test extends Payload {
-    private double identity;
     private int level;
+    private double identity;
 
-    public Test(int from, double identity, int level) {
+    public Test(int from, int level, double identity) {
         super(from);
         this.identity = identity;
         this.level = level;
@@ -19,5 +19,13 @@ public class Test extends Payload {
 
     public int getLevel() {
         return level;
+    }
+
+    @Override
+    public String toString() {
+        return "Test{" +
+                "identity=" + identity +
+                ", level=" + level +
+                '}';
     }
 }

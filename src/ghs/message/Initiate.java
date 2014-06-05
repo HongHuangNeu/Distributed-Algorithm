@@ -26,7 +26,16 @@ public class Initiate extends Payload {
         return core;
     }
 
-    public State getSearch() {
+    public State getState() {
         return search;
+    }
+
+    @Override
+    public String toString() {
+        return "Initiate{" +
+                "level=" + level +
+                ", core=" + core +
+                ", search=" + search +
+                '}';
     }
 }

@@ -7,4 +7,11 @@ public class Reject extends Payload {
     public Reject(int from) {
         super(from);
     }
+
+
+    @Override
+    public String toString() {
+        return "Reject{" +
+                '}';
+    }
 }

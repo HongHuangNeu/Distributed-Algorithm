@@ -24,7 +24,7 @@ public class Message implements Serializable {
         this.senderId = senderId;
         this.sentAt = at;
         this.receiverId = receiverId;
-        this.buffer = buffer;
+        this.buffer = new HashMap<>(buffer);
         this.payload = payload;
     }
 
@@ -54,5 +54,12 @@ public class Message implements Serializable {
 
     public Payload getPayload() {
         return this.payload;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "payload=" + payload +
+                '}';
     }
 }

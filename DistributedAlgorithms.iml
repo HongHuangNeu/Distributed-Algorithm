@@ -11,6 +11,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: kruskal:kruskal:0.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.clojure:clojure:1.5.1" level="project" />
   </component>
 </module>
 

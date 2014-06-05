@@ -18,4 +18,11 @@ public class Report extends Payload {
     public Edge getBestEdge() {
         return bestEdge;
     }
+
+    @Override
+    public String toString() {
+        return "Report{" +
+                "bestEdge=" + bestEdge +
+                '}';
+    }
 }

@@ -14,4 +14,11 @@ public class Connect extends Payload {
     public int getLevel() {
         return level;
     }
+
+    @Override
+    public String toString() {
+        return "Connect{" +
+                "level=" + level +
+                '}';
+    }
 }

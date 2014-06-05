@@ -5,6 +5,7 @@ package ghs.message;
  */
 public class ChangeCore extends Payload {
     private double core;
+
     private int level;
 
     public ChangeCore(int from, double core, int level) {
@@ -15,5 +16,17 @@ public class ChangeCore extends Payload {
 
     public double getCore() {
         return core;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    @Override
+    public String toString() {
+        return "ChangeCore{" +
+                "core=" + core +
+                ", level=" + level +
+                '}';
     }
 }

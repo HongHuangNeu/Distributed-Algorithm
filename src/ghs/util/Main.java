@@ -16,24 +16,43 @@ public class Main {
         try {
             java.rmi.registry.LocateRegistry.createRegistry(4303);
         } catch (RemoteException e) {
-            e.printStackTrace();
+
         }
 
         try {
             String graphFileName = args[0];
             int nodeId = Integer.parseInt(args[1]);
 
-            float[][] graph = GraphReader.readGraph(graphFileName);
+            double[][] graph = GraphReader.readGraph(graphFileName);
+
+            for (int x = 0; x < graph.length; x++) {
+                for (int y = 0; y < graph.length; y++) {
+                    double c = graph[x][y];
+                    System.out.print((c == Double.MAX_VALUE ? "-" : c) + "\t");
+                }
+
+                System.out.println();
+            }
 
             int nNodes = graph.length;
 
-            Node u = new Node(nodeId, nNodes, new VectorClock(nodeId, nNodes), graph[nodeId]);
+            //Node u = new Node(nodeId, nNodes, new VectorClock(nodeId, nNodes), graph[nodeId]);
+
+            Node[] nodes = new Node[nNodes];
+
+            for (int i = 0; i < nNodes; i++) {
+                nodes[i] = new Node(i, nNodes, new VectorClock(nNodes, i), graph[i]);
+            }
+
+            for(Node node : nodes) {
+                new Thread(node).start();
+            }
+
+            nodes[0].wakeup();
 
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Exception in creating process");
         }
     }
-
-
 }

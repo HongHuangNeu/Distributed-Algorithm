@@ -7,4 +7,10 @@ public class Accept extends Payload {
     public Accept(int from) {
         super(from);
     }
+
+    @Override
+    public String toString() {
+        return "Accept{" +
+                '}';
+    }
 }

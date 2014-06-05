@@ -5,7 +5,7 @@ import java.util.Scanner;
 
 public class GraphReader {
 
-    public static float[][] readGraph(String fileName) {
+    public static double[][] readGraph(String fileName) {
         try {
             //read file
             File file = new File(fileName);
@@ -15,12 +15,12 @@ public class GraphReader {
             //number of nodes
             int n = s.nextInt();
             //of the graph
-            float[][] graph = new float[n][n];
+            double[][] graph = new double[n][n];
 
             for (int row = 0; row < n; row++) {
                 graph[row][row] = dist("x");
                 for (int col = 0; col < row; col++) {
-                    float weight = dist(s.next());
+                    double weight = dist(s.next());
                     graph[row][col] = weight;
                     graph[col][row] = weight;
                 }
@@ -29,17 +29,16 @@ public class GraphReader {
             return graph;
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return new float[0][0];
+            return new double[0][0];
         }
     }
 
     //translate a distance string representation to a float x = max
-    public static float dist(String distRep) {
+    public static double dist(String distRep) {
         if (distRep.equals("x")) {
-            return Float.MAX_VALUE;
+            return Double.MAX_VALUE;
         } else {
-            return Float.parseFloat(distRep);
+            return Double.parseDouble(distRep);
         }
     }
 }
