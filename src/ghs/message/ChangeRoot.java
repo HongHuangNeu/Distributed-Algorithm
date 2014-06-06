@@ -3,14 +3,14 @@ package ghs.message;
 /**
  * Created by ferdy on 6/4/14.
  */
-public class ChangeCore extends Payload {
-    public ChangeCore(int from) {
+public class ChangeRoot extends Payload {
+    public ChangeRoot(int from) {
         super(from);
     }
 
     @Override
     public String toString() {
-        return "ChangeCore{" +
+        return "ChangeRoot{" +
                 '}';
     }
 }

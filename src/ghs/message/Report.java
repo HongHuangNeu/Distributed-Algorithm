@@ -11,7 +11,7 @@ public class Report extends Payload {
         this.bestWeight = bestWeight;
     }
 
-    public double getBestWeight() {
+    public double getW() {
         return bestWeight;
     }
 

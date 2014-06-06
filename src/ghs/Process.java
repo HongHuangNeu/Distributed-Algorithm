@@ -35,13 +35,9 @@ public class Process extends UnicastRemoteObject implements RMI,
         this.processId = processIndex;
         this.processClock = clock;
         timeStampBuffer = new HashMap<Integer, VectorTimeStamp>();
-        try {
 
-            Registry registry = LocateRegistry.getRegistry(4303);
-            registry.rebind(Integer.toString(processIndex), this);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        Registry registry = LocateRegistry.getRegistry(4303);
+        registry.rebind(Integer.toString(processIndex), this);
     }
 
     public void send(Payload p, int to) {
@@ -114,9 +110,7 @@ public class Process extends UnicastRemoteObject implements RMI,
         return this.processClock.getCurrentTime().biggerOrEqual(expected);
     }
 
-    private void deliver(Message m) {
-        //this.messageBuffer.remove(m);
-
+    protected void deliver(Message m) {
         this.mergeLocalBuffer(m);
         this.processClock.updateRecieved(m.getSentAt());
         this.processMessage(m.getPayload());
@@ -163,7 +157,7 @@ public class Process extends UnicastRemoteObject implements RMI,
         return result;
     }
 
-    protected void log(String msg) {
-        System.out.println("[" + this.getProcessId() + "\t] " + msg);
+    protected void log(Object toLog) {
+        System.out.println("[" + this.getProcessId() + "\t] " + toLog);
     }
 }

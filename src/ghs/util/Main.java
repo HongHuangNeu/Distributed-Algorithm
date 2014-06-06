@@ -32,7 +32,18 @@ public class Main {
                 System.out.println();
             }
 
+            double[][] mst = kruskal.core.fileToMst(graphFileName);
+
             int nNodes = graph.length;
+
+            for (int x = 0; x < nNodes; x++) {
+                for (int y = 0; y < nNodes; y++) {
+                    Double c = mst[x][y];
+                    System.out.print((c == Double.MAX_VALUE ? "-" : c) + "\t");
+                }
+
+                System.out.println();
+            }
 
             //Node u = new Node(nodeId, nNodes, new VectorClock(nodeId, nNodes), graph[nodeId]);
 

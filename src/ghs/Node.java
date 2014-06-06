@@ -23,7 +23,7 @@ public class Node extends Process {
     private State state = State.SLEEPING;
 
     //indication of the size of this fragment
-    private int level = 0;
+    private int level;
 
     //the 'root' of the fragment this node belongs to
     private double core;
@@ -35,8 +35,8 @@ public class Node extends Process {
     //FIXME should this be queue?
     private Queue<Payload> waitingToJoin = new LinkedList<>();
 
-    //weight of the cheapest edge tried
-    private double heaviestWeightTried;
+    //Edge being tested
+    private int testEdge;
 
     //route to the best edge found
     private int bestEdge;
@@ -44,11 +44,8 @@ public class Node extends Process {
     //best weight found
     private double bestWeight;
 
-    //reports back in
-    private List<Report> inReports = new LinkedList<>();
-
     //expected reports
-    private int expectedReports = 0;
+    private int findCount;
 
     public Node(int processId, int processes, VectorClock clock, double[] adjacent) throws RemoteException {
         super(processId, processes, clock);
@@ -67,12 +64,11 @@ public class Node extends Process {
         Optional<Edge> m = this.minOutEdge();
 
         if (m.isPresent()) {
-            //FIXME cleanup everytime
             Edge best = m.get();
             best.setType(EdgeType.BRANCH);
+            this.state = State.FOUND;
             this.level = 0;
-            this.inReports.clear();
-            this.expectedReports = 0;
+            this.findCount = 0;
             this.send(new Connect(this.getProcessId(), this.level), best.getV());
         } else {
             //TODO terminate
@@ -80,44 +76,42 @@ public class Node extends Process {
     }
 
     private synchronized void processConnect(Connect m) {
+        log("process connect");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
 
-        Optional<Edge> se = this.minOutEdge();
+        Edge j = this.adjacent.get(m.getFrom());
 
-        if (se.isPresent()) {
-            Edge e = se.get();
-            if (this.level > m.getLevel()) {
-                e.setType(EdgeType.BRANCH);
-                this.send(new Initiate(this.getProcessId(), this.level, this.core, this.state), e.getV());
+        if (this.level > m.getLevel()) {
+            j.setType(EdgeType.BRANCH);
+            this.send(new Initiate(this.getProcessId(), this.level, this.core, this.state), m.getFrom());
 
-                if (this.state == State.FIND) {
-                    this.expectedReports++;
-                }
-            } else if (e.getType() == EdgeType.BRANCH) {
-                this.waitingToJoin.offer(m);
-            } else {
-                this.send(new Initiate(this.getProcessId(), this.level + 1, e.getW(), State.FIND), e.getV());
+            if (this.state == State.FIND) {
+                this.findCount++;
             }
+        } else if (j.getType() == EdgeType.BASIC) {
+            this.waitingToJoin.offer(m);
         } else {
-            //TODO terminate?
+            this.send(new Initiate(this.getProcessId(), this.level + 1, j.getW(), State.FIND), m.getFrom());
         }
     }
 
     private synchronized void processInitiate(Initiate m) {
+        log("process initiate");
         this.level = m.getLevel();
         this.core = m.getCore();
         this.state = m.getState();
 
         this.parent = m.getFrom();
         this.bestEdge = -1;
+        this.bestWeight = Double.MAX_VALUE;
 
         this.downStreamEdges().stream().forEach(e -> {
             this.send(new Initiate(this.getProcessId(), this.level, this.core, this.state), e.getV());
 
             if (this.state == State.FIND) {
-                this.expectedReports++;
+                this.findCount++;
             }
         });
 
@@ -127,18 +121,21 @@ public class Node extends Process {
     }
 
     private synchronized void test() {
+        log("test");
         Optional<Edge> testEdgeOptional = this.minOutEdge();
 
         if (testEdgeOptional.isPresent()) {
             Edge testEdge = testEdgeOptional.get();
             this.send(new Test(this.getProcessId(), this.level, this.core), testEdge.getV());
-            this.heaviestWeightTried = testEdge.getW();
+            this.testEdge = testEdge.getV();
         } else {
+            this.testEdge = -1;
             this.report();
         }
     }
 
     private synchronized void processTest(Test m) {
+        log("process test");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -148,12 +145,12 @@ public class Node extends Process {
         } else {
             Edge j = this.adjacent.get(m.getFrom());
 
-            if (j.getType() == EdgeType.BRANCH) {
+            if (j.getType() == EdgeType.BASIC) {
                 j.setType(EdgeType.REJECTED);
             }
 
-            if (this.heaviestWeightTried == this.adjacent.get(m.getFrom()).getW()) {
-                this.send(new Reject(this.getProcessId()), j.getV());
+            if (this.testEdge != m.getFrom()) {
+                this.send(new Reject(this.getProcessId()), m.getFrom());
             } else {
                 this.test();
             }
@@ -161,15 +158,20 @@ public class Node extends Process {
     }
 
     private synchronized void processAccept(Accept m) {
-        this.heaviestWeightTried = Double.MAX_VALUE;
+        log("process accept");
+        this.testEdge = -1;
         Edge j = this.adjacent.get(m.getFrom());
 
-        this.updateBestEdge(j.getW(), j.getV());
+        if (this.bestWeight > j.getW()) {
+            this.bestEdge = m.getFrom();
+            this.bestWeight = j.getW();
+        }
 
         report();
     }
 
     private synchronized void processReject(Reject m) {
+        log("process reject");
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getType() == EdgeType.BASIC) {
@@ -180,25 +182,31 @@ public class Node extends Process {
     }
 
     private synchronized void report() {
-        if (this.allReportsIn() && this.bestEdge != -1) {
+        log("report");
+        if (this.findCount == 0 && this.testEdge == -1) {
             this.state = State.FOUND;
             this.send(new Report(this.getProcessId(), this.bestWeight), this.parent);
         }
     }
 
     private synchronized void processReport(Report m) {
+        log("process report");
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getV() != this.parent) {
-            this.updateBestEdge(m.getBestWeight(), j.getV());
+            this.findCount--;
+            if (this.bestWeight > m.getW()) {
+                this.bestEdge = m.getFrom();
+                this.bestWeight = m.getW();
+            }
             this.report();
         } else {
             if (this.state == State.FIND) {
                 this.waitingToJoin.offer(m);
             } else {
-                if (m.getBestWeight() > this.bestWeight) {
+                if (this.bestWeight < m.getW()) {
                     this.changeRoot();
-                } else if (m.getBestWeight() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
+                } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
                     //todo halt
                     log("halt");
                 }
@@ -207,19 +215,18 @@ public class Node extends Process {
     }
 
     private synchronized void changeRoot() {
+        log("change root");
         if (this.adjacent.get(this.bestEdge).getType() == EdgeType.BRANCH) {
-            this.send(new ChangeCore(this.getProcessId()), this.bestEdge);
+            this.send(new ChangeRoot(this.getProcessId()), this.bestEdge);
         } else {
             this.send(new Connect(this.getProcessId(), this.level), this.bestEdge);
             this.adjacent.get(this.bestEdge).setType(EdgeType.BRANCH);
         }
     }
 
-    private synchronized void processChangeCore(ChangeCore m) {
+    private synchronized void processChangeRoot(ChangeRoot m) {
+        log("change root");
         this.changeRoot();
-    }
-
-    public synchronized void processChangeCore(Report m) {
     }
 
     @Override
@@ -227,8 +234,8 @@ public class Node extends Process {
         if (p instanceof Connect) {
             this.processConnect((Connect) p);
         }
-        if (p instanceof ChangeCore) {
-            this.processChangeCore((ChangeCore) p);
+        if (p instanceof ChangeRoot) {
+            this.processChangeRoot((ChangeRoot) p);
         }
         if (p instanceof Accept) {
             this.processAccept((Accept) p);
@@ -245,23 +252,33 @@ public class Node extends Process {
         if (p instanceof Test) {
             this.processTest((Test) p);
         }
-
-        //this.processQueue();
     }
 
-    private synchronized void processQueue() {
-        this.processMessage(this.waitingToJoin.poll());
-    }
-
-    private synchronized void updateBestEdge(double w, int from) {
-        if (w < this.bestWeight) {
-            this.bestEdge = from;
-            this.bestWeight = w;
+    @Override
+    public void run() {
+        while (true) {
+            this.processQueue();
+            try {
+                Thread.sleep(10);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private boolean allReportsIn() {
-        return this.inReports.size() == this.expectedReports;
+    @Override
+    public void deliver(Message m) {
+        // pass to logger
+
+
+        super.deliver(m);
+    }
+
+    private synchronized void processQueue() {
+        if (!this.waitingToJoin.isEmpty()) {
+            this.processMessage(this.waitingToJoin.poll());
+        }
     }
 
     private Optional<Edge> minOutEdge() {
@@ -275,24 +292,6 @@ public class Node extends Process {
         }).min(Comparator.<Edge>naturalOrder());
     }
 
-    private synchronized boolean inCore() {
-        //is the identity of my fragement the same as the cost of my edges?
-        return this.adjacent.values().stream().anyMatch(e -> {
-            return e.getW() == Node.this.core;
-        });
-    }
-
-    private synchronized boolean isLeave() {
-        //adjacent to only 1 branch?
-        return this.adjacent.values().stream().filter(e -> {
-            return e.getType() == EdgeType.BRANCH;
-        }).count() == 1;
-    }
-
-    private synchronized boolean isInterior() {
-        return !(this.inCore() && this.isLeave());
-    }
-
     private synchronized List<Edge> downStreamEdges() {
         //get the other end of all branch edges that are not the parent
         return this.adjacent.values().stream().filter(e -> {
@@ -303,12 +302,6 @@ public class Node extends Process {
     private synchronized List<Edge> outEdges() {
         return this.adjacent.values().stream().filter(e -> {
             return e.getType() == EdgeType.BASIC;
-        }).collect(Collectors.<Edge>toList());
-    }
-
-    private synchronized List<Edge> branches() {
-        return this.adjacent.values().stream().filter(e -> {
-            return e.getType() == EdgeType.BRANCH;
         }).collect(Collectors.<Edge>toList());
     }
 }
