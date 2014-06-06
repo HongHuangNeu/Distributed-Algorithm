@@ -145,6 +145,7 @@ public class Node extends Process {
         } else {
         
             Edge j = this.adjacent.get(m.getFrom());
+          //You forgot to add this if!
             if(this.core!=m.getIdentity())
             {
             	this.send(new Accept(this.getProcessId()), m.getFrom());
@@ -152,7 +153,7 @@ public class Node extends Process {
 	            if (j.getType() == EdgeType.BASIC) {
 	                j.setType(EdgeType.REJECTED);
 	            }
-	            //You forgot to add this if!
+	            
 	            if (this.testEdge != m.getFrom()) {
 	                this.send(new Reject(this.getProcessId()), m.getFrom());
 	            } else {
