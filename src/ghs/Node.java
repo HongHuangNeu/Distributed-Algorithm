@@ -3,7 +3,10 @@ package ghs;
 import ghs.clock.VectorClock;
 import ghs.message.*;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,7 +74,7 @@ public class Node extends Process {
             this.findCount = 0;
             this.send(new Connect(this.getProcessId(), this.level), best.getV());
         } else {
-            //TODO terminate
+            this.halt();
         }
     }
 
@@ -207,11 +210,35 @@ public class Node extends Process {
                 if (this.bestWeight < m.getW()) {
                     this.changeRoot();
                 } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
-                    //todo halt
                     log("halt");
+                    log("level:" + level);
+                    log("core" + core);
+
+                    this.halt();
                 }
             }
         }
+    }
+
+    private void processTerminate() {
+        this.halt();
+
+    }
+
+    private void halt() {
+        double[] ws = new double[this.processes];
+
+        for (int i = 0; i < this.processes; i++) {
+            Edge e = this.adjacent.get(i);
+
+            ws[i] = e != null ? e.getW() : Double.MAX_VALUE;
+
+        }
+
+        log(new EndReport(getProcessId(), ws));
+        this.downStreamEdges().stream().map(Edge::getV).forEach(v -> {
+            Node.this.send(new Terminate(this.getProcessId()), v);
+        });
     }
 
     private synchronized void changeRoot() {
@@ -251,6 +278,9 @@ public class Node extends Process {
         }
         if (p instanceof Test) {
             this.processTest((Test) p);
+        }
+        if (p instanceof Terminate) {
+            this.processTerminate();
         }
     }
 
@@ -303,5 +333,25 @@ public class Node extends Process {
         return this.adjacent.values().stream().filter(e -> {
             return e.getType() == EdgeType.BASIC;
         }).collect(Collectors.<Edge>toList());
+    }
+
+    protected void log(String message) {
+        this.log(new LogMessage(this.getProcessId(), message));
+    }
+
+    protected void log(Payload p) {
+
+        // get the process proxy
+        Registry registry = null;
+        try {
+            registry = LocateRegistry.getRegistry("127.0.0.1", 4303);
+            Logger logger = (Logger) registry.lookup("logger");
+            logger.receive(this.getProcessId(), p);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+
     }
 }

@@ -2,6 +2,7 @@ package ghs;
 
 import ghs.clock.VectorClock;
 import ghs.clock.VectorTimeStamp;
+import ghs.message.LogMessage;
 import ghs.message.Message;
 import ghs.message.Payload;
 
@@ -23,7 +24,7 @@ public class Process extends UnicastRemoteObject implements RMI,
     private VectorClock processClock;
     public static int round = 0;
     private int messagesSent = 0;
-    private int processes = 0;
+    protected int processes = 0;
 
     private Map<Integer, VectorTimeStamp> timeStampBuffer;   //Local Buffer
     public ArrayList<Message> messageBuffer = new ArrayList<Message>();// Buffer to include undelivered message
@@ -66,7 +67,6 @@ public class Process extends UnicastRemoteObject implements RMI,
     }
 
     public void run() {
-        log("Up and running");
         while (true);
     }
 
@@ -155,9 +155,5 @@ public class Process extends UnicastRemoteObject implements RMI,
             result.put(key, new VectorTimeStamp(localBuffer.get(key).getTime()));
         }
         return result;
-    }
-
-    protected void log(Object toLog) {
-        System.out.println("[" + this.getProcessId() + "\t] " + toLog);
     }
 }

@@ -15,11 +15,4 @@ abstract public class Payload implements Serializable {
     public int getFrom() {
         return from;
     }
-
-    @Override
-    public String toString() {
-        return "Payload{" +
-                "from=" + from +
-                '}';
-    }
 }

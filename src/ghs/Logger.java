@@ -3,6 +3,7 @@ package ghs;
 import ghs.message.EndReport;
 import ghs.message.Payload;
 
+import java.io.Serializable;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -13,7 +14,7 @@ import java.util.Map;
 /**
  * Created by ferdy on 6/6/14.
  */
-public class Logger implements Remote {
+public class Logger implements Remote, Serializable {
 
     private Map<Integer, EndReport> endReports = new HashMap<>();
     private int processes;
@@ -35,7 +36,7 @@ public class Logger implements Remote {
                 System.out.println(succes);
             }
         }
-        System.out.println();
+        System.out.println("[" + from + "\t] " + p);
     }
 
     private double[][] generateGraph() {
