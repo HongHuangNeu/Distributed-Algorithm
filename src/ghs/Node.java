@@ -62,7 +62,6 @@ public class Node extends Process {
     public synchronized void wakeup() {
         log("wakeup");
         Optional<Edge> m = this.minOutEdge();
-
         if (m.isPresent()) {
             Edge best = m.get();
             best.setType(EdgeType.BRANCH);
@@ -70,13 +69,14 @@ public class Node extends Process {
             this.level = 0;
             this.findCount = 0;
             this.send(new Connect(this.getProcessId(), this.level), best.getV());
+
         } else {
             //TODO terminate
         }
     }
 
     private synchronized void processConnect(Connect m) {
-        log("process connect");
+        log("process connect from"+m.getFrom());
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -135,7 +135,7 @@ public class Node extends Process {
     }
 
     private synchronized void processTest(Test m) {
-        log("process test");
+        log("process test from"+m.getFrom());
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -143,16 +143,21 @@ public class Node extends Process {
         if (this.level < m.getLevel()) {
             this.waitingToJoin.offer(m);
         } else {
+        
             Edge j = this.adjacent.get(m.getFrom());
-
-            if (j.getType() == EdgeType.BASIC) {
-                j.setType(EdgeType.REJECTED);
-            }
-
-            if (this.testEdge != m.getFrom()) {
-                this.send(new Reject(this.getProcessId()), m.getFrom());
-            } else {
-                this.test();
+            if(this.core!=m.getIdentity())
+            {
+            	this.send(new Accept(this.getProcessId()), m.getFrom());
+            }else{
+	            if (j.getType() == EdgeType.BASIC) {
+	                j.setType(EdgeType.REJECTED);
+	            }
+	
+	            if (this.testEdge != m.getFrom()) {
+	                this.send(new Reject(this.getProcessId()), m.getFrom());
+	            } else {
+	                this.test();
+	            }
             }
         }
     }
@@ -190,7 +195,7 @@ public class Node extends Process {
     }
 
     private synchronized void processReport(Report m) {
-        log("process report");
+        log("process report from"+m.getFrom());
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getV() != this.parent) {
@@ -208,7 +213,7 @@ public class Node extends Process {
                     this.changeRoot();
                 } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
                     //todo halt
-                    log("halt");
+                    log("halt level"+this.level);
                 }
             }
         }
