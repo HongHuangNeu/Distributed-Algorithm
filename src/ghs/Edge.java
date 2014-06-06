@@ -9,7 +9,7 @@ public class Edge implements Comparable<Edge> {
 
     private double w;
 
-    private EdgeType type;
+    private EdgeType type = EdgeType.BASIC;
 
     public Edge(int u, int v, double c) {
         this.u = u;

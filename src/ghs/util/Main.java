@@ -1,11 +1,9 @@
 package ghs.util;
 
-import java.io.PrintWriter;
-import java.rmi.RemoteException;
-
 import ghs.Node;
 import ghs.clock.VectorClock;
-import ghs.util.GraphReader;
+
+import java.rmi.RemoteException;
 
 public class Main {
     /**
@@ -44,7 +42,7 @@ public class Main {
                 nodes[i] = new Node(i, nNodes, new VectorClock(nNodes, i), graph[i]);
             }
 
-            for(Node node : nodes) {
+            for (Node node : nodes) {
                 new Thread(node).start();
             }
 

@@ -1,10 +1,9 @@
 package ghs;
 
-import java.rmi.RemoteException;
-
-import ghs.message.Message;
 import ghs.clock.VectorTimeStamp;
-import ghs.util.Main;
+import ghs.message.Message;
+
+import java.rmi.RemoteException;
 
 public class DelayedMessageSender implements Runnable {
     private int fromId;

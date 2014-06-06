@@ -1,28 +1,25 @@
 package ghs.message;
 
-import ghs.Edge;
-
-import java.util.Optional;
-
 /**
  * Created by ferdy on 6/4/14.
  */
 public class Report extends Payload {
-    private Edge bestEdge;
+    private double bestWeight;
 
-    public Report(int from, Edge minOutEdge) {
+    public Report(int from, double bestWeight) {
         super(from);
-        this.bestEdge = minOutEdge;
+        this.bestWeight = bestWeight;
     }
 
-    public Edge getBestEdge() {
-        return bestEdge;
+    public double getBestWeight() {
+        return bestWeight;
     }
 
     @Override
     public String toString() {
         return "Report{" +
-                "bestEdge=" + bestEdge +
+                "bestWeight" +
+                "=" + bestWeight +
                 '}';
     }
 }

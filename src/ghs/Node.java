@@ -1,12 +1,11 @@
 package ghs;
 
+import ghs.clock.VectorClock;
+import ghs.message.*;
+
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import ghs.clock.VectorClock;
-
-import ghs.message.*;
 
 
 public class Node extends Process {
@@ -34,16 +33,16 @@ public class Node extends Process {
 
     //the waiting list
     //FIXME should this be queue?
-    private List<Connect> waitingToJoin = new LinkedList<Connect>();
+    private Queue<Payload> waitingToJoin = new LinkedList<>();
 
     //weight of the cheapest edge tried
     private double heaviestWeightTried;
 
-    //sent report to other core member?
-    private boolean sentToOtherCore = false;
+    //route to the best edge found
+    private int bestEdge;
 
-    //best edge I found
-    private Edge bestEdge;
+    //best weight found
+    private double bestWeight;
 
     //reports back in
     private List<Report> inReports = new LinkedList<>();
@@ -64,19 +63,18 @@ public class Node extends Process {
     }
 
     public synchronized void wakeup() {
+        log("wakeup");
         Optional<Edge> m = this.minOutEdge();
 
-        if(m.isPresent()) {
+        if (m.isPresent()) {
             //FIXME cleanup everytime
             Edge best = m.get();
             best.setType(EdgeType.BRANCH);
             this.level = 0;
             this.inReports.clear();
             this.expectedReports = 0;
-            //TODO this.bestEdge = null;
             this.send(new Connect(this.getProcessId(), this.level), best.getV());
-        }
-        else {
+        } else {
             //TODO terminate
         }
     }
@@ -94,20 +92,15 @@ public class Node extends Process {
                 e.setType(EdgeType.BRANCH);
                 this.send(new Initiate(this.getProcessId(), this.level, this.core, this.state), e.getV());
 
-                if(this.state == State.FIND) {
+                if (this.state == State.FIND) {
                     this.expectedReports++;
                 }
-            }
-
-            else if (e.getType() == EdgeType.BRANCH) {
-                this.waitingToJoin.add(m);
-            }
-
-            else {
+            } else if (e.getType() == EdgeType.BRANCH) {
+                this.waitingToJoin.offer(m);
+            } else {
                 this.send(new Initiate(this.getProcessId(), this.level + 1, e.getW(), State.FIND), e.getV());
             }
-        }
-        else {
+        } else {
             //TODO terminate?
         }
     }
@@ -118,7 +111,7 @@ public class Node extends Process {
         this.state = m.getState();
 
         this.parent = m.getFrom();
-        this.bestEdge = null;
+        this.bestEdge = -1;
 
         this.downStreamEdges().stream().forEach(e -> {
             this.send(new Initiate(this.getProcessId(), this.level, this.core, this.state), e.getV());
@@ -128,7 +121,7 @@ public class Node extends Process {
             }
         });
 
-        if(this.state == State.FIND) {
+        if (this.state == State.FIND) {
             this.test();
         }
     }
@@ -140,9 +133,7 @@ public class Node extends Process {
             Edge testEdge = testEdgeOptional.get();
             this.send(new Test(this.getProcessId(), this.level, this.core), testEdge.getV());
             this.heaviestWeightTried = testEdge.getW();
-        }
-
-        else {
+        } else {
             this.report();
         }
     }
@@ -153,21 +144,17 @@ public class Node extends Process {
         }
 
         if (this.level < m.getLevel()) {
-            this.waitingToJoin.add(new Connect(m.getFrom(), m.getLevel()));
-        }
-
-        else {
+            this.waitingToJoin.offer(m);
+        } else {
             Edge j = this.adjacent.get(m.getFrom());
 
-            if(j.getType() == EdgeType.BRANCH) {
+            if (j.getType() == EdgeType.BRANCH) {
                 j.setType(EdgeType.REJECTED);
             }
 
-            if(this.heaviestWeightTried == this.adjacent.get(m.getFrom()).getW()) {
+            if (this.heaviestWeightTried == this.adjacent.get(m.getFrom()).getW()) {
                 this.send(new Reject(this.getProcessId()), j.getV());
-            }
-
-            else {
+            } else {
                 this.test();
             }
         }
@@ -177,9 +164,7 @@ public class Node extends Process {
         this.heaviestWeightTried = Double.MAX_VALUE;
         Edge j = this.adjacent.get(m.getFrom());
 
-        if(j.getW() < this.bestEdge.getW()) {
-            this.bestEdge = j;
-        }
+        this.updateBestEdge(j.getW(), j.getV());
 
         report();
     }
@@ -187,7 +172,7 @@ public class Node extends Process {
     private synchronized void processReject(Reject m) {
         Edge j = this.adjacent.get(m.getFrom());
 
-        if(j.getType() == EdgeType.BASIC) {
+        if (j.getType() == EdgeType.BASIC) {
             j.setType(EdgeType.REJECTED);
         }
 
@@ -195,15 +180,43 @@ public class Node extends Process {
     }
 
     private synchronized void report() {
-        if(this.allReportsIn() && this.bestEdge == null) {
+        if (this.allReportsIn() && this.bestEdge != -1) {
             this.state = State.FOUND;
+            this.send(new Report(this.getProcessId(), this.bestWeight), this.parent);
         }
     }
 
     private synchronized void processReport(Report m) {
+        Edge j = this.adjacent.get(m.getFrom());
+
+        if (j.getV() != this.parent) {
+            this.updateBestEdge(m.getBestWeight(), j.getV());
+            this.report();
+        } else {
+            if (this.state == State.FIND) {
+                this.waitingToJoin.offer(m);
+            } else {
+                if (m.getBestWeight() > this.bestWeight) {
+                    this.changeRoot();
+                } else if (m.getBestWeight() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
+                    //todo halt
+                    log("halt");
+                }
+            }
+        }
+    }
+
+    private synchronized void changeRoot() {
+        if (this.adjacent.get(this.bestEdge).getType() == EdgeType.BRANCH) {
+            this.send(new ChangeCore(this.getProcessId()), this.bestEdge);
+        } else {
+            this.send(new Connect(this.getProcessId(), this.level), this.bestEdge);
+            this.adjacent.get(this.bestEdge).setType(EdgeType.BRANCH);
+        }
     }
 
     private synchronized void processChangeCore(ChangeCore m) {
+        this.changeRoot();
     }
 
     public synchronized void processChangeCore(Report m) {
@@ -211,33 +224,39 @@ public class Node extends Process {
 
     @Override
     public void processMessage(Payload p) {
-        if(p instanceof Connect)
-        {
+        if (p instanceof Connect) {
             this.processConnect((Connect) p);
         }
-        if(p instanceof ChangeCore)
-        {
+        if (p instanceof ChangeCore) {
             this.processChangeCore((ChangeCore) p);
         }
-        if(p instanceof Accept)
-        {
+        if (p instanceof Accept) {
             this.processAccept((Accept) p);
         }
-        if(p instanceof Initiate)
-        {
+        if (p instanceof Initiate) {
             this.processInitiate((Initiate) p);
         }
-        if(p instanceof Reject)
-        {
+        if (p instanceof Reject) {
             this.processReject((Reject) p);
         }
-        if(p instanceof Report)
-        {
+        if (p instanceof Report) {
             this.processReport((Report) p);
         }
-        if(p instanceof Test)
-        {
+        if (p instanceof Test) {
             this.processTest((Test) p);
+        }
+
+        //this.processQueue();
+    }
+
+    private synchronized void processQueue() {
+        this.processMessage(this.waitingToJoin.poll());
+    }
+
+    private synchronized void updateBestEdge(double w, int from) {
+        if (w < this.bestWeight) {
+            this.bestEdge = from;
+            this.bestWeight = w;
         }
     }
 
@@ -245,15 +264,8 @@ public class Node extends Process {
         return this.inReports.size() == this.expectedReports;
     }
 
-
-    private synchronized Edge computeBestEdge() {
-        return this.inReports.stream().map(Report::getBestEdge).reduce(this.bestEdge, (edge1, edge2) -> {
-            return edge1.getW() < edge2.getW() ? edge1 : edge2;
-        });
-    }
-
     private Optional<Edge> minOutEdge() {
-        return this.minOutEdge(Double.MAX_VALUE);
+        return this.minOutEdge(0);
     }
 
     private java.util.Optional<Edge> minOutEdge(double higherThan) {

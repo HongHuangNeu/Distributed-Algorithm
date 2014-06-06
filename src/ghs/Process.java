@@ -1,7 +1,11 @@
 package ghs;
 
+import ghs.clock.VectorClock;
+import ghs.clock.VectorTimeStamp;
+import ghs.message.Message;
+import ghs.message.Payload;
+
 import java.io.Serializable;
-import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -9,11 +13,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import ghs.clock.VectorClock;
-import ghs.clock.VectorTimeStamp;
-import ghs.message.Message;
-import ghs.message.Payload;
 
 //@SuppressWarnings("serial")
 public class Process extends UnicastRemoteObject implements RMI,
@@ -71,19 +70,18 @@ public class Process extends UnicastRemoteObject implements RMI,
     }
 
     public void run() {
-        while (true) ;
+        log("Up and running");
+        while (true);
     }
 
     synchronized public void receive(Message message) throws RemoteException {
-        synchronized (this) {
-            if (this.canDeliver(message)) {
-                this.deliver(message);
-                while (!this.processBuffer()) {
-                    this.processBuffer();
-                }
-            } else {
-                this.messageBuffer.add(message);
+        if (this.canDeliver(message)) {
+            this.deliver(message);
+            while (!this.processBuffer()) {
+                this.processBuffer();
             }
+        } else {
+            this.messageBuffer.add(message);
         }
     }
 
@@ -111,18 +109,14 @@ public class Process extends UnicastRemoteObject implements RMI,
         if (!m.getTimeStampBuffer().containsKey(this.processId)) {
             return true;
         }
-        VectorTimeStamp expected = m.getTimeStampBuffer().get(this.processId);
-        System.out.println(this.processClock.getCurrentTime().biggerOrEqual(expected));
-        System.out.println(expected.getTime());
-        System.out.println(this.processClock.getCurrentTime());
 
+        VectorTimeStamp expected = m.getTimeStampBuffer().get(this.processId);
         return this.processClock.getCurrentTime().biggerOrEqual(expected);
     }
 
     private void deliver(Message m) {
         //this.messageBuffer.remove(m);
 
-        System.out.println("[" + this.processId + "\t]" + "[" + m.getSenderId() + "\t]"  + " process: " + " message: " + m.getPayload());
         this.mergeLocalBuffer(m);
         this.processClock.updateRecieved(m.getSentAt());
         this.processMessage(m.getPayload());
@@ -169,4 +163,7 @@ public class Process extends UnicastRemoteObject implements RMI,
         return result;
     }
 
+    protected void log(String msg) {
+        System.out.println("[" + this.getProcessId() + "\t] " + msg);
+    }
 }

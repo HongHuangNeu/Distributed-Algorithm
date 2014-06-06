@@ -1,6 +1,5 @@
 package ghs.message;
 
-import ghs.Edge;
 import ghs.State;
 
 /**

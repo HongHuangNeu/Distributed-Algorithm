@@ -1,9 +1,10 @@
 package ghs.message;
 
-import java.io.Serializable;
-import java.util.*;
-
 import ghs.clock.VectorTimeStamp;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Message implements Serializable {
     private static final long serialVersionUID = -5836283489677344417L;
