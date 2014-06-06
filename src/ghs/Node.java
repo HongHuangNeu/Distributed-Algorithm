@@ -152,7 +152,7 @@ public class Node extends Process {
 	            if (j.getType() == EdgeType.BASIC) {
 	                j.setType(EdgeType.REJECTED);
 	            }
-	
+	            //You forgot to add this if!
 	            if (this.testEdge != m.getFrom()) {
 	                this.send(new Reject(this.getProcessId()), m.getFrom());
 	            } else {
