@@ -1,5 +1,6 @@
 package ghs.util;
 
+import ghs.Logger;
 import ghs.Node;
 import ghs.clock.VectorClock;
 
@@ -22,6 +23,10 @@ public class Main {
             int nodeId = Integer.parseInt(args[1]);
 
             double[][] graph = GraphReader.readGraph(graphFileName);
+            int nNodes = graph.length;
+
+            //setup logger
+            Logger logger = new Logger(nNodes, graphFileName);
 
             for (int x = 0; x < graph.length; x++) {
                 for (int y = 0; y < graph.length; y++) {
@@ -34,7 +39,6 @@ public class Main {
 
             double[][] mst = kruskal.core.fileToMst(graphFileName);
 
-            int nNodes = graph.length;
 
             for (int x = 0; x < nNodes; x++) {
                 for (int y = 0; y < nNodes; y++) {
@@ -55,6 +59,10 @@ public class Main {
 
             for (Node node : nodes) {
                 new Thread(node).start();
+            }
+
+            for (Node node : nodes) {
+
             }
 
             nodes[0].wakeup();

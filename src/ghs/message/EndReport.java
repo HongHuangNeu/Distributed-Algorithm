@@ -4,14 +4,14 @@ package ghs.message;
  * Created by ferdy on 6/6/14.
  */
 public class EndReport extends Payload {
-    private int[] adjacents;
+    private double[] adjacents;
 
-    public EndReport(int from, int[] adjacents) {
+    public EndReport(int from, double[] adjacents) {
         super(from);
         this.adjacents = adjacents;
     }
 
-    public int[] getAdjacents() {
+    public double[] getAdjacents() {
         return adjacents;
     }
 }

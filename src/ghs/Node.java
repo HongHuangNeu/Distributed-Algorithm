@@ -3,7 +3,10 @@ package ghs;
 import ghs.clock.VectorClock;
 import ghs.message.*;
 
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,12 +74,12 @@ public class Node extends Process {
             this.send(new Connect(this.getProcessId(), this.level), best.getV());
 
         } else {
-            //TODO terminate
+            this.halt();
         }
     }
 
     private synchronized void processConnect(Connect m) {
-        log("process connect from"+m.getFrom());
+        log("process connect");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -135,7 +138,7 @@ public class Node extends Process {
     }
 
     private synchronized void processTest(Test m) {
-        log("process test from"+m.getFrom());
+        log("process test");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -196,7 +199,7 @@ public class Node extends Process {
     }
 
     private synchronized void processReport(Report m) {
-        log("process report from"+m.getFrom());
+        log("process report");
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getV() != this.parent) {
@@ -214,10 +217,35 @@ public class Node extends Process {
                     this.changeRoot();
                 } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
                     //todo halt
-                    log("halt level"+this.level);
+                    log("halt");
+                    log("level:" + level);
+                    log("core" + core);
+
+                    this.halt();
                 }
             }
         }
+    }
+
+    private void processTerminate() {
+        this.halt();
+
+    }
+
+    private void halt() {
+        double[] ws = new double[this.processes];
+
+        for (int i = 0; i < this.processes; i++) {
+            Edge e = this.adjacent.get(i);
+
+            ws[i] = e != null ? e.getW() : Double.MAX_VALUE;
+
+        }
+
+        log(new EndReport(getProcessId(), ws));
+        this.downStreamEdges().stream().map(Edge::getV).forEach(v -> {
+            Node.this.send(new Terminate(this.getProcessId()), v);
+        });
     }
 
     private synchronized void changeRoot() {
@@ -258,6 +286,9 @@ public class Node extends Process {
         if (p instanceof Test) {
             this.processTest((Test) p);
         }
+        if (p instanceof Terminate) {
+            this.processTerminate();
+        }
     }
 
     @Override
@@ -276,7 +307,7 @@ public class Node extends Process {
     @Override
     public void deliver(Message m) {
         // pass to logger
-
+        this.log(m.getPayload());
 
         super.deliver(m);
     }
@@ -309,5 +340,25 @@ public class Node extends Process {
         return this.adjacent.values().stream().filter(e -> {
             return e.getType() == EdgeType.BASIC;
         }).collect(Collectors.<Edge>toList());
+    }
+
+    protected void log(String message) {
+        this.log(new LogMessage(this.getProcessId(), message));
+    }
+
+    protected void log(Payload p) {
+
+        // get the process proxy
+        Registry registry = null;
+        try {
+            registry = LocateRegistry.getRegistry("127.0.0.1", 4303);
+            Logger logger = (Logger) registry.lookup("logger");
+            logger.receive(this.getProcessId(), p);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NotBoundException e) {
+            e.printStackTrace();
+        }
+
     }
 }
