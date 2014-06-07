@@ -28,15 +28,17 @@ public class Logger implements Remote, Serializable {
         registry.rebind("logger", this);
     }
 
-    public void receive(int from, Payload p) throws RemoteException {
+    public synchronized void receive(int from, Payload p) throws RemoteException {
         if(p instanceof EndReport) {
-            this.endReports.put(from, (EndReport)p);
-            if(this.endReports.size() == this.processes) {
+            this.endReports.put((int)p.getFrom(), (EndReport)p);
+            System.out.println(this);
+            System.out.println(this.endReports);
+            if(this.endReports.values().size() == this.processes - 1) {
                 boolean succes = this.generateGraph().equals(kruskal.core.fileToMst(this.graphFileName));
                 System.out.println(succes);
             }
         }
-        System.out.println("[" + from + "\t] " + p);
+        System.out.println("[" + from + "\t -> " + p.getFrom() + "\t] " + p);
     }
 
     private double[][] generateGraph() {

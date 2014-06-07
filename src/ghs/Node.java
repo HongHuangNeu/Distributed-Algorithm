@@ -63,7 +63,6 @@ public class Node extends Process {
     }
 
     public synchronized void wakeup() {
-        log("wakeup");
         Optional<Edge> m = this.minOutEdge();
         if (m.isPresent()) {
             Edge best = m.get();
@@ -79,7 +78,6 @@ public class Node extends Process {
     }
 
     private synchronized void processConnect(Connect m) {
-        log("process connect");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -101,7 +99,6 @@ public class Node extends Process {
     }
 
     private synchronized void processInitiate(Initiate m) {
-        log("process initiate");
         this.level = m.getLevel();
         this.core = m.getCore();
         this.state = m.getState();
@@ -124,7 +121,6 @@ public class Node extends Process {
     }
 
     private synchronized void test() {
-        log("test");
         Optional<Edge> testEdgeOptional = this.minOutEdge();
 
         if (testEdgeOptional.isPresent()) {
@@ -138,7 +134,6 @@ public class Node extends Process {
     }
 
     private synchronized void processTest(Test m) {
-        log("process test");
         if (this.state == State.SLEEPING) {
             this.wakeup();
         }
@@ -167,7 +162,6 @@ public class Node extends Process {
     }
 
     private synchronized void processAccept(Accept m) {
-        log("process accept");
         this.testEdge = -1;
         Edge j = this.adjacent.get(m.getFrom());
 
@@ -180,7 +174,6 @@ public class Node extends Process {
     }
 
     private synchronized void processReject(Reject m) {
-        log("process reject");
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getType() == EdgeType.BASIC) {
@@ -191,7 +184,6 @@ public class Node extends Process {
     }
 
     private synchronized void report() {
-        log("report");
         if (this.findCount == 0 && this.testEdge == -1) {
             this.state = State.FOUND;
             this.send(new Report(this.getProcessId(), this.bestWeight), this.parent);
@@ -199,7 +191,6 @@ public class Node extends Process {
     }
 
     private synchronized void processReport(Report m) {
-        log("process report");
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getV() != this.parent) {
@@ -218,8 +209,6 @@ public class Node extends Process {
                 } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
                     //todo halt
                     log("halt");
-                    log("level:" + level);
-                    log("core" + core);
 
                     this.halt();
                 }
@@ -249,7 +238,6 @@ public class Node extends Process {
     }
 
     private synchronized void changeRoot() {
-        log("change root");
         if (this.adjacent.get(this.bestEdge).getType() == EdgeType.BRANCH) {
             this.send(new ChangeRoot(this.getProcessId()), this.bestEdge);
         } else {
@@ -259,7 +247,6 @@ public class Node extends Process {
     }
 
     private synchronized void processChangeRoot(ChangeRoot m) {
-        log("change root");
         this.changeRoot();
     }
 
