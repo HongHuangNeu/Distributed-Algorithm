@@ -1,0 +1,8 @@
+#!/bin/sh
+JAR=${1}
+NJVM=${2}
+for ((i=0; i<$NJVM; i++))
+do
+        echo "start jvm " + $i;
+        java8 -jar $JAR small $i $NJVM &
+done
