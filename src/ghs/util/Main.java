@@ -20,7 +20,7 @@ public class Main {
         try {
             String graphFileName = args[0];
             int nodeId = Integer.parseInt(args[1]);
-
+            System.out.println("The graph is");
             double[][] graph = GraphReader.readGraph(graphFileName);
 
             for (int x = 0; x < graph.length; x++) {
@@ -35,7 +35,7 @@ public class Main {
             double[][] mst = kruskal.core.fileToMst(graphFileName);
 
             int nNodes = graph.length;
-
+            System.out.println("The MST is");
             for (int x = 0; x < nNodes; x++) {
                 for (int y = 0; y < nNodes; y++) {
                     Double c = mst[x][y];

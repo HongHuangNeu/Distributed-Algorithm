@@ -177,7 +177,7 @@ public class Node extends Process {
     }
 
     private synchronized void processReject(Reject m) {
-        log("process reject");
+        log("process reject from"+m.getFrom());
         Edge j = this.adjacent.get(m.getFrom());
 
         if (j.getType() == EdgeType.BASIC) {
