@@ -27,6 +27,7 @@ public class Main {
 
             //setup logger
             Logger logger = new Logger(nNodes, graphFileName);
+            new Thread(logger).start();
 
             for (int x = 0; x < graph.length; x++) {
                 for (int y = 0; y < graph.length; y++) {
@@ -62,10 +63,8 @@ public class Main {
             }
 
             for (Node node : nodes) {
-
+                node.wakeup();
             }
-
-            nodes[0].wakeup();
 
         } catch (Exception e) {
             e.printStackTrace();

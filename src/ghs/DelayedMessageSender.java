@@ -2,18 +2,19 @@ package ghs;
 
 import ghs.clock.VectorTimeStamp;
 import ghs.message.Message;
+import ghs.rmi.MessageReciever;
 
 import java.rmi.RemoteException;
 
 public class DelayedMessageSender implements Runnable {
     private int fromId;
-    private RMI to;
+    private MessageReciever to;
     private Message m;
     private VectorTimeStamp t;
 
     private long maxDelay = 0;
 
-    public DelayedMessageSender(int fromId, VectorTimeStamp t, RMI to, Message m, long maxDelay) {
+    public DelayedMessageSender(int fromId, VectorTimeStamp t, MessageReciever to, Message m, long maxDelay) {
         this.fromId = fromId;
         this.to = to;
         this.t = t;

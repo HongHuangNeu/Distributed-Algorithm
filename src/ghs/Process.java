@@ -2,9 +2,9 @@ package ghs;
 
 import ghs.clock.VectorClock;
 import ghs.clock.VectorTimeStamp;
-import ghs.message.LogMessage;
 import ghs.message.Message;
 import ghs.message.Payload;
+import ghs.rmi.MessageReciever;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 //@SuppressWarnings("serial")
-public class Process extends UnicastRemoteObject implements RMI,
+public class Process extends UnicastRemoteObject implements MessageReciever,
         Runnable, Serializable {
     private static final long serialVersionUID = 7247714666080613254L;
 
@@ -34,6 +34,7 @@ public class Process extends UnicastRemoteObject implements RMI,
 
         super();
         this.processId = processIndex;
+        this.processes = processes;
         this.processClock = clock;
         timeStampBuffer = new HashMap<Integer, VectorTimeStamp>();
 
@@ -53,7 +54,7 @@ public class Process extends UnicastRemoteObject implements RMI,
                 // get the process proxy
                 Registry registry = LocateRegistry.getRegistry("127.0.0.1",
                         4303);
-                RMI reciever = (RMI) registry.lookup(Integer.toString(m.getReceiverId()));
+                MessageReciever reciever = (MessageReciever) registry.lookup(Integer.toString(m.getReceiverId()));
 
                 // send the message
                 this.messagesSent++;

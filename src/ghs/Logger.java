@@ -1,7 +1,9 @@
 package ghs;
 
 import ghs.message.EndReport;
+import ghs.message.Message;
 import ghs.message.Payload;
+import ghs.rmi.MessageReciever;
 
 import java.io.Serializable;
 import java.rmi.Remote;
@@ -14,9 +16,10 @@ import java.util.Map;
 /**
  * Created by ferdy on 6/6/14.
  */
-public class Logger implements Remote, Serializable {
+public class Logger implements MessageReciever, Serializable, Runnable {
 
-    private Map<Integer, EndReport> endReports = new HashMap<>();
+    private static final long serialVersionUID = 7247714126080613254L;
+    private static Map<Integer, EndReport> endReports = new HashMap<>();
     private int processes;
     private String graphFileName;
 
@@ -28,30 +31,37 @@ public class Logger implements Remote, Serializable {
         registry.rebind("logger", this);
     }
 
-    public synchronized void receive(int from, Payload p) throws RemoteException {
-        if(p instanceof EndReport) {
-            this.endReports.put((int)p.getFrom(), (EndReport)p);
-            System.out.println(this);
-            System.out.println(this.endReports);
-            if(this.endReports.values().size() == this.processes - 1) {
+    @Override
+    synchronized public void receive(Message m) throws RemoteException {
+        if(m.getPayload() instanceof EndReport) {
+            this.endReports.put((int) m.getPayload().getFrom(), (EndReport) m.getPayload());
+            if(this.endReports.values().size() == this.processes) {
                 boolean succes = this.generateGraph().equals(kruskal.core.fileToMst(this.graphFileName));
                 System.out.println(succes);
             }
         }
-        System.out.println("[" + from + "\t -> " + p.getFrom() + "\t] " + p);
+        System.out.println("[" + m.getSenderId() + "\t -> " + m.getPayload().getFrom() + "\t] " + m.getPayload());
     }
 
     private double[][] generateGraph() {
         double[][] graph = new double[this.processes][this.processes];
 
         for(int y = 0; y < this.processes; y ++) {
+            double[] row = endReports.get(y).getAdjacents();
+            System.out.println();
             for(int x = 0; x < this.processes; x++) {
-                double w = this.endReports.get(x).getAdjacents()[y];
+                double w = row[x];
+                System.out.print(w != Double.MAX_VALUE ? w : "-");
+                System.out.print("\t");
                 graph[x][y] = w;
                 graph[y][x] = w;
             }
         }
 
         return graph;
+    }
+
+    public void run () {
+        while(true);
     }
 }

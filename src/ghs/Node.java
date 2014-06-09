@@ -1,6 +1,7 @@
 package ghs;
 
 import ghs.clock.VectorClock;
+import ghs.clock.VectorTimeStamp;
 import ghs.message.*;
 
 import java.rmi.NotBoundException;
@@ -227,11 +228,22 @@ public class Node extends Process {
         for (int i = 0; i < this.processes; i++) {
             Edge e = this.adjacent.get(i);
 
-            ws[i] = e != null ? e.getW() : Double.MAX_VALUE;
-
+            if(e != null) {
+                if(e.getType() == EdgeType.BRANCH) {
+                    ws[i] = e.getW();
+                }
+                else {
+                    ws[i] = Double.MAX_VALUE;
+                }
+            }
+            else {
+                ws[i] = Double.MAX_VALUE;
+            }
         }
 
         log(new EndReport(getProcessId(), ws));
+
+        //propagate halt
         this.downStreamEdges().stream().map(Edge::getV).forEach(v -> {
             Node.this.send(new Terminate(this.getProcessId()), v);
         });
@@ -340,7 +352,11 @@ public class Node extends Process {
         try {
             registry = LocateRegistry.getRegistry("127.0.0.1", 4303);
             Logger logger = (Logger) registry.lookup("logger");
-            logger.receive(this.getProcessId(), p);
+            synchronized (logger) {
+                //send a message with dummy fields for clock/buffer.
+                // logger does not use message ordering since there is no delay used.
+                logger.receive(new Message(this.getProcessId(), -1, null, new HashMap<>(), p));
+            }
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (NotBoundException e) {
