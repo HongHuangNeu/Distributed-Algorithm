@@ -20,15 +20,13 @@ public class Main {
 
         try {
             String graphFileName = args[0];
-            int nodeId = Integer.parseInt(args[1]);
+            int iJVM = Integer.parseInt(args[1]);
+            int nJVM = Integer.parseInt(args[2]);
 
             double[][] graph = GraphReader.readGraph(graphFileName);
             int nNodes = graph.length;
 
-            //setup logger
-            Logger logger = new Logger(nNodes, graphFileName);
-            new Thread(logger).start();
-
+            System.out.println("Original Graph");
             for (int x = 0; x < graph.length; x++) {
                 for (int y = 0; y < graph.length; y++) {
                     double c = graph[x][y];
@@ -40,7 +38,7 @@ public class Main {
 
             double[][] mst = kruskal.core.fileToMst(graphFileName);
 
-
+            System.out.println("Kruskal mst");
             for (int x = 0; x < nNodes; x++) {
                 for (int y = 0; y < nNodes; y++) {
                     Double c = mst[x][y];
@@ -50,20 +48,20 @@ public class Main {
                 System.out.println();
             }
 
-            //Node u = new Node(nodeId, nNodes, new VectorClock(nodeId, nNodes), graph[nodeId]);
+            if(iJVM == 0) {
+                //setup logger
+                Logger logger = new Logger(nNodes, graphFileName);
+                new Thread(logger).start();
+            }
 
             Node[] nodes = new Node[nNodes];
-
             for (int i = 0; i < nNodes; i++) {
-                nodes[i] = new Node(i, nNodes, new VectorClock(nNodes, i), graph[i]);
-            }
-
-            for (Node node : nodes) {
-                new Thread(node).start();
-            }
-
-            for (Node node : nodes) {
-                node.wakeup();
+                if(nJVM % (i + 1) == iJVM)
+                {
+                    System.out.println("creating and making a new node");
+                    nodes[i] = new Node(i, nNodes, new VectorClock(nNodes, i), graph[i]);
+                    new Thread(nodes[i]).start();
+                }
             }
 
         } catch (Exception e) {

@@ -7,6 +7,8 @@ import ghs.message.Payload;
 import ghs.rmi.MessageReciever;
 
 import java.io.Serializable;
+import java.rmi.AccessException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -63,7 +65,12 @@ public class Process extends UnicastRemoteObject implements MessageReciever,
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
+            this.send(p, to);
         }
     }
 

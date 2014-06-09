@@ -2,11 +2,9 @@ package ghs;
 
 import ghs.message.EndReport;
 import ghs.message.Message;
-import ghs.message.Payload;
 import ghs.rmi.MessageReciever;
 
 import java.io.Serializable;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -36,7 +34,7 @@ public class Logger implements MessageReciever, Serializable, Runnable {
         if(m.getPayload() instanceof EndReport) {
             this.endReports.put((int) m.getPayload().getFrom(), (EndReport) m.getPayload());
             if(this.endReports.values().size() == this.processes) {
-                boolean succes = this.generateGraph().equals(kruskal.core.fileToMst(this.graphFileName));
+                boolean succes = this.weighTree(this.generateGraph()) == (this.weighTree(kruskal.core.fileToMst(this.graphFileName)));
                 System.out.println(succes);
             }
         }
@@ -59,6 +57,21 @@ public class Logger implements MessageReciever, Serializable, Runnable {
         }
 
         return graph;
+    }
+
+    public double weighTree(double[][] tree) {
+        double weight = 0;
+
+        for (int x = 0; x < this.processes; x++) {
+            for (int y = 0; y < x; y++) {
+                double w = tree[x][y];
+                if(w != Double.MAX_VALUE) {
+                    weight += w;
+                }
+            }
+        }
+
+        return weight;
     }
 
     public void run () {

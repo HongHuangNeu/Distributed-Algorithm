@@ -228,13 +228,8 @@ public class Node extends Process {
         for (int i = 0; i < this.processes; i++) {
             Edge e = this.adjacent.get(i);
 
-            if(e != null) {
-                if(e.getType() == EdgeType.BRANCH) {
-                    ws[i] = e.getW();
-                }
-                else {
-                    ws[i] = Double.MAX_VALUE;
-                }
+            if(e != null && e.getType() == EdgeType.BRANCH) {
+                ws[i] = e.getW();
             }
             else {
                 ws[i] = Double.MAX_VALUE;
@@ -292,14 +287,9 @@ public class Node extends Process {
 
     @Override
     public void run() {
+        this.wakeup();
         while (true) {
             this.processQueue();
-            try {
-                Thread.sleep(10);
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
     }
 
