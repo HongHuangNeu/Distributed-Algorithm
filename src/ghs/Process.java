@@ -43,6 +43,7 @@ public class Process extends UnicastRemoteObject implements MessageReciever,
     }
 
     public void send(Payload p, int to) {
+       
         try {
             synchronized (this) {
                 // notify the clock
@@ -60,6 +61,7 @@ public class Process extends UnicastRemoteObject implements MessageReciever,
                 this.messagesSent++;
                 DelayedMessageSender sender = new DelayedMessageSender(this.processId, this.processClock.getCurrentTime(), reciever, m, 1000);
                 new Thread(sender).start();
+                System.out.println("[" + m.getSenderId() + "\t -> " + m.getPayload().getFrom() + "\t] " + m.getPayload());
             }
 
         } catch (Exception e) {

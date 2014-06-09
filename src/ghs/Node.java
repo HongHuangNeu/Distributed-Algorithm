@@ -51,9 +51,19 @@ public class Node extends Process {
     //expected reports
     private int findCount;
 
+    private double[][] result ;
+    private int endCounter=0;
     public Node(int processId, int processes, VectorClock clock, double[] adjacent) throws RemoteException {
         super(processId, processes, clock);
-
+        result = new double[this.processes][this.processes];
+        for(int i=0;i<this.processes;i++)
+        {
+        	for(int j=0;j<this.processes;j++)
+        	{
+        		result[i][j]=Double.MAX_VALUE;
+        	}
+        }
+        
         this.adjacent = new HashMap<>(adjacent.length);
 
         for (int i = 0; i < adjacent.length; i++) {
@@ -190,7 +200,32 @@ public class Node extends Process {
             this.send(new Report(this.getProcessId(), this.bestWeight), this.parent);
         }
     }
+    private synchronized void processEndReport(EndReport m)
+    {
+    	this.endCounter++;
+    	int i=m.getFrom();
+    	double[] ad=m.getAdjacents();
+    	for(int j=0;j<ad.length;j++)
+    	{
+    		result[i][j]=ad[j];
+    		result[j][i]=ad[j];
+    	}
+    	if(this.endCounter==processes)
+    	{
+    		System.out.println(this.getProcessId()+"reports final result:"); 
+    		for(int y = 0; y < this.processes; y ++) {
+    	            
+    	            System.out.println();
+    	            for(int x = 0; x < this.processes; x++) {
+    	                double w = result[y][x];
+    	                System.out.print(w != Double.MAX_VALUE ? w : "-");
+    	                System.out.print("\t");
+  
+    	            }
+    	        }
 
+    	}
+    }
     private synchronized void processReport(Report m) {
         Edge j = this.adjacent.get(m.getFrom());
 
@@ -209,8 +244,8 @@ public class Node extends Process {
                     this.changeRoot();
                 } else if (m.getW() == Double.MAX_VALUE && this.bestWeight == Double.MAX_VALUE) {
                     //todo halt
-                    log("halt");
-
+                   // log("halt");
+                	System.out.println(this.getProcessId()+"halt LEVEL"+level);
                     this.halt();
                 }
             }
@@ -223,7 +258,10 @@ public class Node extends Process {
     }
 
     private void halt() {
-        double[] ws = new double[this.processes];
+        
+    	
+    	
+    	double[] ws = new double[this.processes];
 
         for (int i = 0; i < this.processes; i++) {
             Edge e = this.adjacent.get(i);
@@ -240,8 +278,9 @@ public class Node extends Process {
                 ws[i] = Double.MAX_VALUE;
             }
         }
-
-        log(new EndReport(getProcessId(), ws));
+        
+        send(new EndReport(this.getProcessId(),ws), 0);
+        //log(new EndReport(getProcessId(), ws));
 
         //propagate halt
         this.downStreamEdges().stream().map(Edge::getV).forEach(v -> {
@@ -288,6 +327,9 @@ public class Node extends Process {
         if (p instanceof Terminate) {
             this.processTerminate();
         }
+        if (p instanceof EndReport) {
+            this.processEndReport((EndReport)p);
+        }
     }
 
     @Override
@@ -306,7 +348,7 @@ public class Node extends Process {
     @Override
     public void deliver(Message m) {
         // pass to logger
-        this.log(m.getPayload());
+       // this.log(m.getPayload());
 
         super.deliver(m);
     }
@@ -341,27 +383,5 @@ public class Node extends Process {
         }).collect(Collectors.<Edge>toList());
     }
 
-    protected void log(String message) {
-        this.log(new LogMessage(this.getProcessId(), message));
-    }
-
-    protected void log(Payload p) {
-
-        // get the process proxy
-        Registry registry = null;
-        try {
-            registry = LocateRegistry.getRegistry("127.0.0.1", 4303);
-            Logger logger = (Logger) registry.lookup("logger");
-            synchronized (logger) {
-                //send a message with dummy fields for clock/buffer.
-                // logger does not use message ordering since there is no delay used.
-                logger.receive(new Message(this.getProcessId(), -1, null, new HashMap<>(), p));
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (NotBoundException e) {
-            e.printStackTrace();
-        }
-
-    }
+   
 }
