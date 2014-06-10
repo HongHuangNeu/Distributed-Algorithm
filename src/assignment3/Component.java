@@ -47,10 +47,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 			find_count=0;
 	 * */
 	
-	private ArrayList<Integer> unknown_inMST=new ArrayList<Integer>();
-	private ArrayList<Integer> not_inMST=new ArrayList<Integer>();
-	private ArrayList<Integer> inMST=new ArrayList<Integer>();
-	
+	//private ArrayList<Integer> unknown_inMST=new ArrayList<Integer>();
+	//private ArrayList<Integer> not_inMST=new ArrayList<Integer>();
+	//private ArrayList<Integer> inMST=new ArrayList<Integer>();
+	Map<Integer, EdgeType> edgeList = new HashMap<Integer, EdgeType>();
 	private int componentId;
 	private int totalNumber;
 	private int maxDelay=1000;
@@ -93,7 +93,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			if(this.adjacent[i]!=Float.MAX_VALUE)
 			{
-				this.unknown_inMST.add(i);
+				edgeList.put(i, EdgeType.Unknown);
 			}
 		}
 		
@@ -251,7 +251,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 						if(msg.getBest_weight()==best_weight&&msg.getBest_weight()==Float.MAX_VALUE)
 						{
 							System.out.println(this.componentId+"Halt");
-							System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
+				//			System.out.println(this.componentId+"process: in MST:"+inMST+"\n  not in MST:"+this.not_inMST);
 							System.out.println(this.FN+" level"+this.LN);
 							checkTerminate();
 							SN=State.Found;
@@ -267,12 +267,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 		synchronized(this){
 			int j=adjacentMinimalEdge();
 			//System.out.println(this.componentId+" unknown list"+unknown_inMST);
-			this.delUnknownInMst(j);
-			//this.unknown_inMST.remove(j);
-			this.delNotInMst(j);
-			//this.not_inMST.remove(j);
-			//inMST.add(j);//single
-			addInMst(j);
+			edgeList.put(j, EdgeType.inMST);
+		
 			LN=0;
 			SN=State.Found;
 			find_count=0;
@@ -282,7 +278,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void change_root()
 	{
 		synchronized(this){	
-			if(inMST.contains(this.best_edge))
+		//	if(inMST.contains(this.best_edge))
+			if(edgeList.get(best_edge)==EdgeType.inMST)
 			{
 				this.send(new ChangeRoot(this.componentId), this.best_edge);
 			}
@@ -290,12 +287,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 			{
 				this.send(new Connect(this.componentId,LN), this.best_edge);
 				//System.out.println(this.componentId+" unknown list "+unknown_inMST);
-				this.delUnknownInMst(best_edge);
-				//this.unknown_inMST.remove(this.best_edge);
-				this.delNotInMst(best_edge);
-				//this.not_inMST.remove(this.best_edge);
+			
 				//inMST.add(this.best_edge);//single
-				addInMst(best_edge);
+			
+				edgeList.put(best_edge, EdgeType.inMST);
 			}
 		}
 	}
@@ -312,7 +307,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			best_weight=Float.MAX_VALUE;
 			for(int i=0;i<adjacent.length;i++)
 			{
-				if(adjacent[i]!=Float.MAX_VALUE&&i!=msg.getSenderId()&&inMST.contains(i))
+				if(adjacent[i]!=Float.MAX_VALUE&&i!=msg.getSenderId()&&edgeList.get(i)==EdgeType.inMST)//inMST.contains(i))
 				{
 					send(new Initiate(this.componentId,msg.getL(),FN=msg.getF(),SN=msg.getS()),i);
 					if(msg.getS().equals(State.Find))
@@ -330,9 +325,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void test()
 	{
 		
-		System.out.println(this.componentId+" try to test, unknown"+this.unknown_inMST);
+		//System.out.println(this.componentId+" try to test, unknown"+this.unknown_inMST);
 		synchronized(this){	
-			if(this.unknown_inMST.size()!=0)
+			if(this.containsUnknown())
 			{
 				test_edge=this.unknowMinimumEdge();
 				send(new Test(this.componentId,LN,FN),test_edge);
@@ -354,13 +349,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 			}
 			if(msg.getL()<LN)
 			{
-				//System.out.println(this.componentId+"unknown list"+unknown_inMST);
-				//this.unknown_inMST.remove(msg.getSenderId());
-				this.delUnknownInMst(msg.getSenderId());
-				//this.not_inMST.remove(msg.getSenderId());
-				this.delNotInMst(msg.getSenderId());
-				//inMST.add(msg.getSenderId());//single
-				addInMst(msg.getSenderId());
+				edgeList.put(msg.getSenderId(), EdgeType.inMST);
+				//addInMst(msg.getSenderId());
 				send(new Initiate(this.componentId,LN,FN,SN),msg.getSenderId());
 				if(SN.equals(State.Find))
 				{
@@ -368,10 +358,10 @@ public class Component extends UnicastRemoteObject implements RMI,
 				}
 			}
 			else{
-				if(this.unknown_inMST.contains(msg.getSenderId()))
+				if(this.edgeList.get(msg.getSenderId())==EdgeType.Unknown)//unknown_inMST.contains(msg.getSenderId()))
 				{
 					this.queue.offer(msg);
-					System.out.println(componentId+"cannot connect"+unknown_inMST);
+					System.out.println(componentId+"cannot connect");
 				}
 				else{
 					send(new Initiate(this.componentId,LN+1,adjacent[msg.getSenderId()],State.Find),msg.getSenderId());
@@ -400,15 +390,11 @@ public class Component extends UnicastRemoteObject implements RMI,
 	               if (test-edge ¡Ù j) then send(reject) on edge j  
 	               else test()*/
 					
-					if(this.unknown_inMST.contains(msg.getSenderId()))
+					if(this.edgeList.get(msg.getSenderId())==EdgeType.Unknown)//unknown_inMST.contains(msg.getSenderId()))
 					{
 						//System.out.println(this.componentId+" unknown list"+unknown_inMST);
-						//this.unknown_inMST.remove(msg.getSenderId());
-						this.delUnknownInMst(msg.getSenderId());
-						//this.inMST.remove(msg.getSenderId());
-						this.delInMst(msg.getSenderId());
-						//this.not_inMST.add(msg.getSenderId());//single
-						addNotInMst(msg.getSenderId());
+					edgeList.put(msg.getSenderId(), EdgeType.notInMST);
+					//	addNotInMst(msg.getSenderId());
 					}
 					if(test_edge!=msg.getSenderId())
 					{
@@ -438,15 +424,13 @@ public class Component extends UnicastRemoteObject implements RMI,
 	{System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
 		
 		synchronized(this){
-			if(this.unknown_inMST.contains(msg.getSenderId()))
+			if(edgeList.get(msg.getSenderId())==EdgeType.Unknown)//this.unknown_inMST.contains(msg.getSenderId()))
 			{	//System.out.println("still unknown");
 				//System.out.println(this.componentId+" unknown list "+unknown_inMST);
-				//this.unknown_inMST.remove(msg.getSenderId());
-				this.delUnknownInMst(msg.getSenderId());
-				//this.inMST.remove(msg.getSenderId());
-				this.delInMst(msg.getSenderId());
+			
 				//this.not_inMST.add(msg.getSenderId());//single
-				addNotInMst(msg.getSenderId());
+				edgeList.put(msg.getSenderId(), EdgeType.notInMST);
+			
 			}
 			test();
 		}
@@ -560,11 +544,11 @@ Message m3=null;
 		if(printed){return;}
 		synchronized(this){
 			
-			if(unknown_inMST.size()==0&&!printed)
+			if(!this.containsUnknown()&&!printed)
 			{
 				System.out.println("for "+componentId);
-				System.out.println(inMST+" are in MST");
-				System.out.println(not_inMST+" are not in MST");
+				//System.out.println(inMST+" are in MST");
+				//System.out.println(not_inMST+" are not in MST");
 				SN=State.Found;
 				
 				for(int i=0;i<adjacent.length;i++)
@@ -572,7 +556,7 @@ Message m3=null;
 					if(adjacent[i]!=Float.MAX_VALUE)
 					{
 						send(new CheckTerminate(this.componentId),i);
-						if(!this.inMST.contains(i))
+						if(edgeList.get(i)!=EdgeType.inMST)//!this.inMST.contains(i))
 						{adjacent[i]=Float.MAX_VALUE;}
 					}
 				}
@@ -611,66 +595,39 @@ Message m3=null;
 			return index;
 		}
 	}
-	public void addInMst(int item)
+	
+	
+	
+	public boolean containsUnknown()
 	{
-		if(!inMST.contains(item))
-		{
-			inMST.add(item);
-		}
+		
+		Iterator iter = edgeList.entrySet().iterator();
+		boolean flag=false;
+		while (iter.hasNext()) {
+		    Map.Entry entry = (Map.Entry) iter.next();
+		    if((EdgeType)entry.getValue()==EdgeType.Unknown)
+		    { 
+		    	flag=true;
+		    }
+		} 
+		return flag;
 	}
-	public void addNotInMst(int item)
-	{
-		if(!not_inMST.contains(item))
-		{
-			not_inMST.add(item);
-		}
-	}
-	public void delInMst(int item)
-	{
-		for(int i=0;i<this.inMST.size();i++)
-		{
-			if(inMST.get(i)==item)
-			{
-				inMST.remove(i);
-				return;
-			}
-		}
-	}
-	public void delNotInMst(int item)
-	{
-		for(int i=0;i<this.not_inMST.size();i++)
-		{
-			if(not_inMST.get(i)==item)
-			{
-				not_inMST.remove(i);
-				return;
-			}
-		}
-	}
-	public void delUnknownInMst(int item)
-	{
-		for(int i=0;i<this.unknown_inMST.size();i++)
-		{
-			if(unknown_inMST.get(i)==item)
-			{
-				unknown_inMST.remove(i);
-				return;
-			}
-		}
-	}
+	
+	
 	public int unknowMinimumEdge()
 	{
+		float min=Float.MAX_VALUE;
+		int index=-1;
 		synchronized(this){
-			int index=this.unknown_inMST.get(0);
-			float min=Float.MAX_VALUE;
-			for(int i:this.unknown_inMST)
-			{
-				if(this.adjacent[i]<min)
-				{
-					index=i;
-					min=adjacent[i];
-				}
-			}
+			
+			Iterator iter = edgeList.entrySet().iterator();
+			while (iter.hasNext()) {
+			    Map.Entry entry = (Map.Entry) iter.next();
+			    if((EdgeType)entry.getValue()==EdgeType.Unknown&&adjacent[(int)entry.getKey()]<min)
+			    { index = (int)entry.getKey();
+			        min = adjacent[(int)entry.getKey()];
+			    }
+			} 
 			return index;
 		}
 	}

@@ -21,7 +21,7 @@ public static PrintWriter writer ;
 		// TODO Auto-generated method stub
 		float[][] arr=GraphReader.readGraph("small");
 		int numProcess=GraphReader.processNum;
-		int numJVM=2;
+		int numJVM=Integer.parseInt(args[1]);
 		int indexJVM=Integer.parseInt(args[0]);
 		
 				

@@ -31,7 +31,7 @@ public class main {
 		 * in cmd to kill all the processes after terminating app in Eclipse!
 		 * */
 	}
-	public static void runJVM(int numJVM,final int indexJVM)
+	public static void runJVM(final int numJVM,final int indexJVM)
 	{
 		System.out.println("total JVM"+numJVM+" index"+indexJVM);
 		System.out.println("========================================================");	
@@ -50,6 +50,7 @@ public class main {
 						command.add(System.getProperty("java.class.path"));
 						command.add(assignment3.Main.class.getCanonicalName());
 						command.add("" + indexJVM);
+						command.add(""+numJVM);
 						//command.add("" + f);
 						System.out.println(command);
 						ProcessBuilder pb = new ProcessBuilder(command);
