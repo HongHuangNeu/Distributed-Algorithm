@@ -39,6 +39,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private int c=0;
 	private boolean printed=false;
 	Queue<Message> queue = new LinkedList<Message>(); 
+	Queue<Message> messageLink = new LinkedList<Message>(); 
+
 	/*
 	 * LN=0;
 			SN=State.Found;
@@ -55,11 +57,25 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private int[] msgIndex;
 	private int[] expectIndex;
 	
+	
+	
+	 private float[][] result ;
+	    private int endCounter=0;
 	public Component(int componentIndex,int totalNumber,float[] adjacent)
 			throws RemoteException{
 		super();
+		
+        for(int i=0;i<this.totalNumber;i++)
+        {
+        	for(int j=0;j<this.totalNumber;j++)
+        	{
+        		result[i][j]=Float.MAX_VALUE;
+        	}
+        }
+        
 		this.componentId=componentIndex;
 		this.totalNumber=totalNumber;
+		result = new float[this.totalNumber][this.totalNumber];
 		this.adjacent=new float[totalNumber];
 		msgIndex=new int[totalNumber];
 		expectIndex=new int[totalNumber];
@@ -96,6 +112,54 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	
 
+	public void processMessage(Message message)
+	{
+		
+			if(message instanceof Connect)
+			{
+				this.processConnect((Connect)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof ChangeRoot)
+			{
+				this.processChangeRoot();
+		//		processRequest((Request)message);
+			}
+			if(message instanceof Accept)
+			{
+				this.processAccept((Accept)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof Initiate)
+			{
+				this.processInitial((Initiate)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof Reject)
+			{
+				this.processReject((Reject)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof Report)
+			{
+				this.processReport((Report)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof Test)
+			{
+				this.processTest((Test)message);
+		//		processRequest((Request)message);
+			}
+			if(message instanceof CheckTerminate)
+			{
+				checkTerminate();
+			}
+			if(message instanceof EndReport)
+			{
+				this.processEndReport((EndReport)message);
+			}
+		
+	}
 	
 	
 	public void send(Message m, int receiverIndex)
@@ -119,13 +183,15 @@ public class Component extends UnicastRemoteObject implements RMI,
 			////System.out.println("after send"+mObj.getId()+this.processClock.getCurrentTime());
 			// get the proxy object
 			Registry registry = LocateRegistry.getRegistry("127.0.0.1",
-					4303);
+					PortNumber.portnumber);
 			RMI reciever = (RMI) registry.lookup(Integer.toString(receiverIndex));
 			
 			// send the message
-			//reciever.receive(mObj);
-			DelayedMessageSender sender = new DelayedMessageSender(reciever, mObj, 0);
-			new Thread(sender).start();
+			
+			reciever.receive(mObj);
+						
+			//DelayedMessageSender sender = new DelayedMessageSender(reciever, mObj, 0);
+			//new Thread(sender).start();
 			
 		}
 		catch (Exception e)
@@ -197,6 +263,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void wakeup()
 	{
+		System.out.println(componentId+"wakeup");
 		synchronized(this){
 			int j=adjacentMinimalEdge();
 			//System.out.println(this.componentId+" unknown list"+unknown_inMST);
@@ -278,7 +345,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	public void processConnect(Connect msg)
 	{
-		if(componentId==1)
+	
 		System.out.println(this.componentId+"process msg connect "+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
@@ -368,7 +435,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processReject(Reject msg)
-	{////System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
+	{System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
 		
 		synchronized(this){
 			if(this.unknown_inMST.contains(msg.getSenderId()))
@@ -386,54 +453,108 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void run() {
 	boolean flag=true;
-		while(SN.equals(State.Sleep))
-		{
-			wakeup();
-		}
 		
-		while(true){
-			synchronized(this)
-			{	
-			if(queue.size()!=0)
-			{
-				
-					Message m=queue.poll();
-					if(m!=null)
-					{	try {
-							//System.out.println(this.componentId+" processDelayed");
-							this.receive(m);
-						} catch (RemoteException e) {
-							// TODO Auto-generated catch block
-							//System.out.println("re handling exception!");
-						}
-					}
-				
+		if(componentId==totalNumber-1&&SN.equals(State.Sleep))
+			wakeup();
+		
+		
+		while(!printed){
+			
+			Message m1=null;
+			
+			
+			synchronized(this){
+			 m1=messageLink.poll();
 			}
-			}
+		
+	
+		if(m1!=null)
+		{	
+			
+			processMessage(m1);
+		
+		}
+			
+			Message m2=null;
+			
+				synchronized(this){
+				
+					 m2=queue.poll();
+									
+				}
+			
+				if(m2!=null)
+				{	
+					
+					processMessage(m2);
+				
+				}
+
 		
 			//processDelayedMessage();		
 		}
+		while(componentId==0)
+		{
+			
+Message m3=null;
+			
+			
+			synchronized(this){
+			 m3=messageLink.poll();
+			}
+		
+	
+		if(m3!=null)
+		{	
+			
+			processMessage(m3);
+		
+		}
+			
+			Message m4=null;
+			
+				synchronized(this){
+				
+					 m4=queue.poll();
+									
+				}
+			
+				if(m4!=null)
+				{	
+					
+					processMessage(m4);
+				
+				}
+			
+		}
 	}
-	public  boolean equalLists(List<Integer> one, List<Integer> two){     
-	    if (one == null && two == null){
-	        return true;
-	    }
+	private synchronized void processEndReport(EndReport m)
+    {
+		
+    	this.endCounter++;
+    	int i=m.getSenderId();
+    	float[] ad=m.getAdjacent();
+    	for(int j=0;j<ad.length;j++)
+    	{
+    		result[i][j]=ad[j];
+    		result[j][i]=ad[j];
+    	}
+    	if(this.endCounter==this.totalNumber)
+    	{
+    		System.out.println(this.componentId+"reports final result:"); 
+    		for(int y = 0; y < this.totalNumber; y ++) {
+    	            
+    	            System.out.println();
+    	            for(int x = 0; x < this.totalNumber; x++) {
+    	                float w = result[y][x];
+    	                System.out.print(w != Float.MAX_VALUE ? w : "-");
+    	                System.out.print("\t");
+  
+    	            }
+    	        }
 
-	    if((one == null && two != null) 
-	      || one != null && two == null
-	      || one.size() != two.size()){
-	        return false;
-	    }
-
-	    //to avoid messing the order of the lists we will use a copy
-	    //as noted in comments by A. R. S.
-	    one = new ArrayList<Integer>(one); 
-	    two = new ArrayList<Integer>(two);   
-
-	    Collections.sort(one);
-	    Collections.sort(two);      
-	    return one.equals(two);
-	}
+    	}
+    }
 	public void checkTerminate()
 	{
 		if(printed){return;}
@@ -445,80 +566,30 @@ public class Component extends UnicastRemoteObject implements RMI,
 				System.out.println(inMST+" are in MST");
 				System.out.println(not_inMST+" are not in MST");
 				SN=State.Found;
-				printed=true;
+				
 				for(int i=0;i<adjacent.length;i++)
 				{
 					if(adjacent[i]!=Float.MAX_VALUE)
 					{
 						send(new CheckTerminate(this.componentId),i);
+						if(!this.inMST.contains(i))
+						{adjacent[i]=Float.MAX_VALUE;}
 					}
 				}
 			}
 			
 		}
+		send(new EndReport(this.componentId,adjacent),0);
+		printed=true;
 	}
-	public void processDelayedMessage()
-	{
-		while(queue.size()!=0)
-		{
-			synchronized(this)
-			{
-				Message m=queue.poll();
-				if(m!=null)
-				{	try {
-						//System.out.println(this.componentId+" processDelayed");
-						this.receive(m);
-					} catch (RemoteException e) {
-						// TODO Auto-generated catch block
-						//System.out.println("re handling exception!");
-					}
-				}
-			}
-		}
-	}
+	
 	public  void receive(Message message) throws RemoteException {
-		// notify the clock
 		
-		if(message instanceof Connect)
-		{
-			this.processConnect((Connect)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof ChangeRoot)
-		{
-			this.processChangeRoot();
-	//		processRequest((Request)message);
-		}
-		if(message instanceof Accept)
-		{
-			this.processAccept((Accept)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof Initiate)
-		{
-			this.processInitial((Initiate)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof Reject)
-		{
-			this.processReject((Reject)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof Report)
-		{
-			this.processReport((Report)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof Test)
-		{
-			this.processTest((Test)message);
-	//		processRequest((Request)message);
-		}
-		if(message instanceof CheckTerminate)
-		{
-			checkTerminate();
-		}
+		//	queue.add(message);
+		
 
+			messageLink.offer(message);
+	
 	}
 	private long generateDelay()
 	{

@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: DistributedAlgorithms
+Bundle-SymbolicName: DistributedAlgorithms
+Bundle-Version: 1.0.0.qualifier
+Export-Package: assignment1,
+ assignment1.clock,
+ assignment3,
+ distribute
