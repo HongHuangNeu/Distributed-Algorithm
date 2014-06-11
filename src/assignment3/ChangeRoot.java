@@ -5,4 +5,9 @@ public class ChangeRoot extends Message{
 	{
 		super(senderId);
 	}
+	@Override
+	public String toString()
+	{
+		return "ChangeRoot";
+	}
 }

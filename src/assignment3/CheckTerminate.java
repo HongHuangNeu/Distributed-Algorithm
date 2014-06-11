@@ -5,4 +5,9 @@ public class CheckTerminate extends Message{
 	{
 		super(senderId);
 	}
+	@Override
+	public String toString()
+	{
+		return "terminate";
+	}
 }

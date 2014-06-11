@@ -29,4 +29,9 @@ private State S;
 	public void setS(State s) {
 		S = s;
 	}
+	@Override
+	public String toString()
+	{
+		return "Initiate";
+	}
 }

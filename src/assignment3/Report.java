@@ -13,4 +13,9 @@ public class Report extends Message{
 	public void setBest_weight(float best_weight) {
 		this.best_weight = best_weight;
 	}
+	@Override
+	public String toString()
+	{
+		return "Report";
+	}
 }

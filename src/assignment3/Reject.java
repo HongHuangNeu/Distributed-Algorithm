@@ -5,4 +5,9 @@ public class Reject extends Message{
 	{
 		super(senderId);
 	}
+	@Override
+	public String toString()
+	{
+		return "Reject";
+	}
 }

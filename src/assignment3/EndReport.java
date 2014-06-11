@@ -13,4 +13,9 @@ public class EndReport extends Message{
 		super(senderId);
 		this.adjacent=adjacent;
 	}
+	@Override
+	public String toString()
+	{
+		return "End REPORT";
+	}
 }

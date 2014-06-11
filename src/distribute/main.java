@@ -1,7 +1,7 @@
 package distribute;
 
 /****************************************************************************************
- * @author LieYen Cheung & Ahmad Yandriansyah 											*	
+ * 											*	
  *																						*
  * This class simulate multiple processes for the RBA program							* 
  ***************************************************************************************/

@@ -6,4 +6,9 @@ public class Accept extends Message{
 	{
 		super(senderId);
 	}
+	@Override
+	public String toString()
+	{
+		return "Accept message";
+	}
 }

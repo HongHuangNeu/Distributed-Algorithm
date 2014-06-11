@@ -169,6 +169,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		
 		m.seq_id=msgIndex[receiverIndex];
 		msgIndex[receiverIndex]++;
+		System.out.println("["+m.getSenderId()+"->"+receiverIndex+"]"+m);
 		boolean success=false;
 		do{
 		try
@@ -213,8 +214,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void report()
 	{
-		if(componentId==1)
-		System.out.println(componentId+"try to report");
+		//if(componentId==1)
+		//System.out.println(componentId+"try to report");
 		synchronized(this){
 			//System.out.println("find count"+find_count);
 			if(find_count==0&&this.test_edge==Accept.Initial)
@@ -225,14 +226,14 @@ public class Component extends UnicastRemoteObject implements RMI,
 				
 				System.out.println(componentId+"report to"+in_branch);
 			}else{
-				System.out.println(componentId+"cannot report, find_count"+find_count+"test edge"+test_edge);
+				//System.out.println(componentId+"cannot report, find_count"+find_count+"test edge"+test_edge);
 			}
 		}
 	}
 	public void processReport(Report msg)
 	{
-		if(componentId==1)
-		System.out.println(this.componentId+"process msg report from"+msg.getSenderId()+"seq"+msg.seq_id);
+		//if(componentId==1)
+		//System.out.println(this.componentId+"process msg report from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(msg.getSenderId()!=in_branch)
 			{
@@ -302,8 +303,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	}
 	public void processInitial(Initiate msg)
 	{
-		if(componentId==1)
-		System.out.println(this.componentId+"process msg initiate from"+msg.getSenderId()+"seq"+msg.seq_id);
+	//	if(componentId==1)
+	//	System.out.println(this.componentId+"process msg initiate from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			LN=msg.getL();
 			FN=msg.getF();
@@ -347,7 +348,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processConnect(Connect msg)
 	{
 	
-		System.out.println(this.componentId+"process msg connect "+msg.getSenderId()+"seq"+msg.seq_id);
+		//System.out.println(this.componentId+"process msg connect "+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -367,7 +368,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				if(this.edgeList.get(msg.getSenderId())==EdgeType.Unknown)//unknown_inMST.contains(msg.getSenderId()))
 				{
 					this.queue.offer(msg);
-					System.out.println(componentId+"cannot connect");
+					//System.out.println(componentId+"cannot connect");
 				}
 				else{
 					send(new Initiate(this.componentId,LN+1,adjacent[msg.getSenderId()],State.Find),msg.getSenderId());
@@ -378,7 +379,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processTest(Test msg)
 	{
 		
-		System.out.println(this.componentId+"process msg test from"+msg.getSenderId()+"seq"+msg.seq_id);
+		//System.out.println(this.componentId+"process msg test from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			if(SN.equals(State.Sleep))
 			{
@@ -415,7 +416,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void processAccept(Accept msg)
 	{	
 		
-		System.out.println(this.componentId+"process msg accept from"+msg.getSenderId()+"seq"+msg.seq_id);
+		//System.out.println(this.componentId+"process msg accept from"+msg.getSenderId()+"seq"+msg.seq_id);
 		synchronized(this){
 			test_edge=Accept.Initial;
 			if(adjacent[msg.getSenderId()]<best_weight)
@@ -427,7 +428,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		}
 	}
 	public void processReject(Reject msg)
-	{System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
+	{//System.out.println(this.componentId+"process msg reject from"+msg.getSenderId());
 		
 		synchronized(this){
 			if(edgeList.get(msg.getSenderId())==EdgeType.Unknown)//this.unknown_inMST.contains(msg.getSenderId()))

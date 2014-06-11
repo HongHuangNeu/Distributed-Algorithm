@@ -21,4 +21,9 @@ private float F;
 	public void setF(float f) {
 		F = f;
 	}
+	@Override
+	public String toString()
+	{
+		return "Test";
+	}
 }

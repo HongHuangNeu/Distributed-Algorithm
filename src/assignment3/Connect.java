@@ -13,4 +13,9 @@ public class Connect extends Message{
 	public void setL(int l) {
 		L = l;
 	}
+	@Override
+	public String toString()
+	{
+		return "Connect";
+	}
 }
