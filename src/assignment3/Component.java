@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Queue;
 
 
+
+
 import assignment3.DelayedMessageSender;
 import assignment1.Process;
 import assignment1.clock.VectorClock;
@@ -167,6 +169,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 		
 		m.seq_id=msgIndex[receiverIndex];
 		msgIndex[receiverIndex]++;
+		boolean success=false;
+		do{
 		try
 		{
 			
@@ -189,16 +193,18 @@ public class Component extends UnicastRemoteObject implements RMI,
 			// send the message
 			
 			reciever.receive(mObj);
-						
+						success=true;
 			//DelayedMessageSender sender = new DelayedMessageSender(reciever, mObj, 0);
 			//new Thread(sender).start();
 			
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
-
+			//e.printStackTrace();
+			System.out.print("not registered yet!");
+			success=false;
 		}
+		}while(!success);
 	}
 	
 	public void processChangeRoot()
@@ -438,7 +444,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	public void run() {
 	boolean flag=true;
 		
-		if(componentId==totalNumber-1&&SN.equals(State.Sleep))
+		if(SN.equals(State.Sleep))
 			wakeup();
 		
 		
@@ -455,6 +461,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 		if(m1!=null)
 		{	
 			
+			
 			processMessage(m1);
 		
 		}
@@ -467,6 +474,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 									
 				}
 			
+				
 				if(m2!=null)
 				{	
 					
