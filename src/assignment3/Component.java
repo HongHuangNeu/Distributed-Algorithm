@@ -34,6 +34,8 @@ import java.util.Queue;
 
 
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import assignment3.DelayedMessageSender;
 import assignment1.Process;
 import assignment1.clock.VectorClock;
@@ -54,8 +56,8 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private float[] adjacent;
 	private int c=0;
 	private boolean printed=false;
-	//Queue<Message> queue = new LinkedList<Message>(); 
-	Queue<Message> messageLink = new LinkedList<Message>(); 
+	 
+	ConcurrentLinkedQueue<Message> messageLink = new ConcurrentLinkedQueue<Message>(); 
 	boolean zeroPrinted=false;
 	/*
 	 * LN=0;
@@ -477,7 +479,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			Message m1=null;
 			
 			
-			synchronized(this){
+			synchronized(messageLink){
 			 m1=messageLink.poll();
 			}
 		
@@ -492,7 +494,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			Message m2=null;
 			
-				synchronized(this){
+				synchronized(messageLink){
 				
 					 m2=messageLink.poll();//TODO
 									
@@ -515,7 +517,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			Message m3=null;
 			
 			
-			synchronized(this){
+			synchronized(messageLink){
 			 m3=messageLink.poll();
 			}
 		
@@ -529,7 +531,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			Message m4=null;
 			
-			synchronized(this){
+			synchronized(messageLink){
 				
 					 m4=messageLink.poll();//TODO
 									
@@ -611,7 +613,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 	
 	public  void receive(Message message) throws RemoteException {
 		
-		//	queue.add(message);
+		
 		
 			synchronized(messageLink){
 			messageLink.offer(message);

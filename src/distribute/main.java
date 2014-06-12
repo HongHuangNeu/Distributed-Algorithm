@@ -19,7 +19,7 @@ public class main {
 	private static final int f =0;
 	
 	public static void main(String[] args) throws Exception {
-		int numJVM=2;
+		int numJVM=20;
 		
 		java.rmi.registry.LocateRegistry.createRegistry(4303);
 		for(int i=0;i<numJVM;i++)
