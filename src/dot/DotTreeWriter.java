@@ -50,9 +50,9 @@ public class DotTreeWriter {
             //edge exists
             String edge = "\t" + x + " -- " + y + "[label=\"" + Float.toString(mstWeight) + "\"";
 
-            if (graphWeight < mstWeight) {
+            if (graphWeight == mstWeight) {
                 //in mst
-                edge += ",color=red,penwidth=0.2";
+                edge += ",color=red";
             }
 
             edge += "];\n";
