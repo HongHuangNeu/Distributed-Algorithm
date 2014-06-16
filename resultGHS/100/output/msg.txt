@@ -1,0 +1,4 @@
+assignment3.Connect=100, assignment3.Accept=76, assignment3.Report=100, assignment3.Test=100, absord=75, assignment3.Initiate=67, assignment3.ChangeRoot=11, merge=48, assignment3.Reject=100
+core 14 39
+NAME 34.0
+LEVEL 3

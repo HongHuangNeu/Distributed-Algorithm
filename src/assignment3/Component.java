@@ -393,6 +393,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				edgeList.put(msg.getSenderId(), EdgeType.inMST);
 				//addInMst(msg.getSenderId());
 				send(new Initiate(this.componentId,LN,FN,SN),msg.getSenderId());
+				this.addAbsord();
 				if(SN.equals(State.Find))
 				{
 					find_count++;
@@ -406,6 +407,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 				}
 				else{
 					send(new Initiate(this.componentId,LN+1,adjacent[msg.getSenderId()],State.Find),msg.getSenderId());
+					this.addMerge();
 				}
 			}
 		}
@@ -726,6 +728,28 @@ public class Component extends UnicastRemoteObject implements RMI,
 		return flag;
 	}
 	
+	public void addAbsord()
+	{
+		if(!stat.containsKey("absord"))
+		{
+			stat.put("absord", 1);
+		}else
+		{
+			int counter=stat.get("absord");
+			stat.put("absord", counter+1);
+		}
+	}
+	public void addMerge()
+	{
+		if(!stat.containsKey("merge"))
+		{
+			stat.put("merge", 1);
+		}else
+		{
+			int counter=stat.get("merge");
+			stat.put("merge", counter+1);
+		}
+	}
 	
 	public int unknowMinimumEdge()
 	{
