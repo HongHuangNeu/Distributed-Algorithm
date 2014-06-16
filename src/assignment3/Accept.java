@@ -11,4 +11,5 @@ public class Accept extends Message{
 	{
 		return "Accept message";
 	}
+	
 }

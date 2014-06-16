@@ -37,9 +37,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import assignment3.DelayedMessageSender;
-import assignment1.Process;
-import assignment1.clock.VectorClock;
-import assignment1.clock.VectorTimeStamp;
+
 
 //@SuppressWarnings("serial")
 public class Component extends UnicastRemoteObject implements RMI,
@@ -56,7 +54,9 @@ public class Component extends UnicastRemoteObject implements RMI,
 	private float[] adjacent;
 	private int c=0;
 	private boolean printed=false;
+	 Map<String,Integer> stat=new HashMap<String,Integer>();
 	 
+	 Map<String,Integer> resultMap=new HashMap<String,Integer>();
 	ConcurrentLinkedQueue<Message> messageLink = new ConcurrentLinkedQueue<Message>(); 
 	boolean zeroPrinted=false;
 	/*
@@ -185,7 +185,21 @@ public class Component extends UnicastRemoteObject implements RMI,
 		
 		m.seq_id=msgIndex[receiverIndex];
 		msgIndex[receiverIndex]++;
-		System.out.println("["+m.getSenderId()+"->"+receiverIndex+"]"+m);
+		System.out.println("["+m.getSenderId()+"->"+receiverIndex+"]"+m+"class name:"+m.getClass().getName());
+		
+		synchronized(stat)
+		{
+			if(stat.containsKey(m.getClass().getName()))
+			{
+				int count=stat.get(m.getClass().getName());
+				stat.put(m.getClass().getName(), count++);
+			}
+			else{
+				stat.put(m.getClass().getName(), 1);
+			}
+		}
+		
+		
 		boolean success=false;
 		do{
 		try
@@ -552,6 +566,20 @@ public class Component extends UnicastRemoteObject implements RMI,
     	this.endCounter++;
     	int i=m.getSenderId();
     	float[] ad=m.getAdjacent();
+    	 Iterator it = m.getM().entrySet().iterator();
+    	  while (it.hasNext()) {
+    	   Map.Entry entry = (Map.Entry) it.next();
+    	    String key=(String)entry.getKey();
+    	   int value = (Integer)entry.getValue();
+    	   if(resultMap.containsKey(key))
+    	   {
+    		  int counter=resultMap.get(key);
+    		  resultMap.put(key, counter+value);
+    	   }
+    	  	else{
+    	  		resultMap.put(key, value);
+    	  	}
+    	  }
     	for(int j=0;j<ad.length;j++)
     	{
     		result[i][j]=ad[j];
@@ -559,22 +587,35 @@ public class Component extends UnicastRemoteObject implements RMI,
     	}
     	if(this.endCounter==this.totalNumber)
     	{
-    		
+    		PrintWriter writer =null;
+    		try {
+				 writer = new PrintWriter("result", "UTF-8");
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     		
     		
     		System.out.println(this.componentId+"reports final result:"); 
+    		System.out.println(this.totalNumber);
+    		writer.println(this.totalNumber);
     		for(int y = 0; y < this.totalNumber; y ++) {
-    	            
+    	            if(y!=0)
     	            System.out.println();
-    	            for(int x = 0; x < this.totalNumber; x++) {
+    	            if(y!=0)
+    	            writer.println();
+    	            for(int x = 0; x < this.totalNumber&&x<y; x++) {
     	                float w = result[y][x];
-    	                System.out.print(w != Float.MAX_VALUE ? w : "-");
-    	                System.out.print("\t");
-  
+    	                System.out.print(w != Float.MAX_VALUE ? w : "x");
+    	                System.out.print(" ");
+    	                writer.print(w != Float.MAX_VALUE ? w : "x");
+    	                writer.print(" ");
     	            }
     	        }
     		zeroPrinted=true;
-
+    		writer.close();
+    		System.out.println();
+    		System.out.println(resultMap);
     	}
     }
 	public void checkTerminate()
@@ -607,7 +648,7 @@ public class Component extends UnicastRemoteObject implements RMI,
 			
 			
 		}
-		send(new EndReport(this.componentId,adjacent),0);
+		send(new EndReport(this.componentId,adjacent,stat),0);
 		printed=true;
 	}
 	
