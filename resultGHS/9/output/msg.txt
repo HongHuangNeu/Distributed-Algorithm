@@ -1,0 +1,3 @@
+assignment3.Connect=9, assignment3.Report=9, assignment3.Accept=8, assignment3.Test=9, assignment3.Initiate=8, assignment3.ChangeRoot=2, assignment3.Reject=1
+level 3
+core 3 4

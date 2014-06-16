@@ -1,0 +1,2 @@
+assignment3.Connect=10, assignment3.Accept=6, assignment3.Report=10, assignment3.Test=10, assignment3.Initiate=9, assignment3.ChangeRoot=1, assignment3.Reject=10
+core 1  and 4 level 2 name 6.0

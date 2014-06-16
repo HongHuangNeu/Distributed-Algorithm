@@ -616,6 +616,34 @@ public class Component extends UnicastRemoteObject implements RMI,
     		writer.close();
     		System.out.println();
     		System.out.println(resultMap);
+    		List<String> command = new ArrayList<String>();
+			
+			String javaBin = "java ";
+			command.add(javaBin);
+			command.add("-cp");
+			command.add(System.getProperty("java.class.path"));
+			command.add(dot.Main.class.getCanonicalName());
+			command.add("small" );
+			command.add("result");
+			command.add("result.png");
+			//command.add("" + f);
+			System.out.println(command);
+			ProcessBuilder pb = new ProcessBuilder(command);
+			pb.redirectErrorStream(true);
+			Process p=null;
+			try {
+				p = pb.start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			try {
+				p.waitFor();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
     	}
     }
 	public void checkTerminate()

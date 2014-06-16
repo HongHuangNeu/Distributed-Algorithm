@@ -14,7 +14,7 @@ public class Main {
 
 //        Writer writer = new FileWriter(new File(pngName));
         Runtime rt = Runtime.getRuntime();
-        Process dotProcess = rt.exec("sfdp -Kcirco -Tpng -o " + pngName);
+        Process dotProcess = rt.exec("dot -Kcirco -Tpng -o " + pngName);
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
                 dotProcess.getOutputStream()));
         BufferedReader reader = new BufferedReader(new InputStreamReader(
