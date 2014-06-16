@@ -21,6 +21,7 @@ public class DotTreeWriter {
         //write header
         try {
             to.write("graph {\n");
+            to.write("\trankdir=LR;");
 
             int n = graph.length;
 
@@ -41,14 +42,13 @@ public class DotTreeWriter {
     }
 
     private static String edgeToDot(int x, int y, float graphWeight, float mstWeight) {
-        if (graphWeight == Float.MAX_VALUE) {
-            //not an edge
+        if (new Float(graphWeight).equals(new Float(Float.MAX_VALUE))) {
             return "";
         }
 
         else {
             //edge exists
-            String edge = "\t" + x + " -- " + y + "[label=\"" + Float.toString(mstWeight) + "\"";
+            String edge = "\t" + x + " -- " + y + "[label=\"" + Float.toString(graphWeight) + "\"";
 
             if (graphWeight == mstWeight) {
                 //in mst
